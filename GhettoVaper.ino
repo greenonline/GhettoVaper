@@ -62,9 +62,10 @@ const int kSTATE_COIL         = 1;
 const int kSTATE_POWER        = 2;
 const int kSTATE_RESISTANCE   = 3;
 const int kSTATE_MATERIAL     = 4;
-const int kSTATE_VOLTAGEDROP  = 5;
-const int kSTATE_READER       = 6;
-const int kSTATE_ADDRESS      = 7;
+const int kSTATE_TEMPERATURE  = 5;
+const int kSTATE_VOLTAGEDROP  = 6;
+const int kSTATE_READER       = 7;
+const int kSTATE_ADDRESS      = 8;
 
 // Coil Materials
 const int kMaterial_SS304        = 0;
@@ -110,25 +111,30 @@ const int EE_batteryVoltageDropAddress = 10;
 const int EE_programVoltageDropAddress = 12;
 const int EE_programMaterialAddress = 14;
 const int EE_materialAddress = 16;
+const int EE_temperatureAddress = 18;
 
 
-//const int numStates = 8;                 // not used
+//const int numStates = 9;                 // not used
 const float minResistance = 0.0;
 const float maxResistance = 2.0;
-const int numResistanceSteps = 20;
+const int   numResistanceSteps = 20;
 const float stepResistanceWeight = (maxResistance - minResistance)/numResistanceSteps;
 const float minPower = 0.0;
 const float maxPower = 70.0;
-const int numPowerSteps = 70;
-const float
-stepPowerWeight = (maxPower - minPower)/numPowerSteps;  //shoud be float
+const int   numPowerSteps = 70;
+const float stepPowerWeight = (maxPower - minPower)/numPowerSteps; 
+const float minTemperature = 0.0;
+const float maxTemperature = 500.0;
+const int   numTemperatureSteps = 70;
+const float stepTemperatureWeight = (maxTemperature - minTemperature)/numTemperatureSteps; 
 const float minVoltage = 1.0;
 const float maxVoltage = 4.2;
-const int numVoltageSteps = 20;
+const int   numVoltageSteps = 20;
 const float stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;
-const int numProgs = 3;
-const int numVoltageDropProgs = 4;
-const int numMaterialProgs = 10;
+// Progs are the number of sub settings for a particular function (or State)
+const int numProgs = 3;      // Used to cycle (wrap around) Progs
+const int numVoltageDropProgs = 4;      // Used to cycle (wrap around) VoltageDropProgs
+const int numMaterialProgs = 10;      // Used to cycle (wrap around) MaterialProgs
 const int interval = 100;
 
 int strPos = 0;
@@ -377,6 +383,23 @@ void stateMachine(){
           EEPROM.write(EE_materialAddress, (EEPROM.read(EE_materialAddress)+1)%numMaterialProgs);
         if(button.wasHeld())
 //          state = 5;
+          state++;
+        break;
+      }
+
+      case(kSTATE_TEMPERATURE):  // adjust temperature
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Coil Temperature:");
+        lcd.setCursor(0,1);
+        lcd.print(minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight);
+        lcd.print(" \337C"); // degree symbol (Omega) octal (244 in decimal)
+        button.check();
+        if(button.wasClicked())
+          EEPROM.write(EE_temperatureAddress, (EEPROM.read(EE_temperatureAddress)+1)%numTemperatureSteps);
+        if(button.wasHeld())
+//          state = 4;
           state++;
         break;
       }
