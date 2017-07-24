@@ -51,29 +51,29 @@
 
 
 // Pins
-const int fetPin             = 11;
-const int lcd_backlight       = 2;
+const int fetPin                 = 11;
+const int lcd_backlight          = 2;
 #if defined (__Using_DFRobot_1602_LCD__)
-const int secondButton       = 10;  // Original
-const int batteryPin         = A0;  // Original
+const int secondButton           = 10;  // Original
+const int batteryPin             = A0;  // Original
 #else
-const int secondButton       = 12;  // For DR Robot 16x02 display
-const int batteryPin         = A3;  // For DR Robot 16x02 display
+const int secondButton           = 12;  // For DR Robot 16x02 display
+const int batteryPin             = A3;  // For DR Robot 16x02 display
 #endif
-const int coilVoltageDropPin = A1;
-const int currentMeasurePin  = A2;
-const float currentMeasureR  = 0.5;  //Ohms - Resistance of current measuring resistor
+const int coilVoltageDropPin     = A1;
+const int currentMeasurePin      = A2;
+const float currentMeasureR      = 0.5;  //Ohms - Resistance of current measuring resistor
 
 // State Engine states
-const int kSTATE_BAT          = 0;
-const int kSTATE_COIL         = 1;
-const int kSTATE_POWER        = 2;
-const int kSTATE_RESISTANCE   = 3;
-const int kSTATE_MATERIAL     = 4;
-const int kSTATE_TEMPERATURE  = 5;
-const int kSTATE_VOLTAGEDROP  = 6;
-const int kSTATE_READER       = 7;
-const int kSTATE_ADDRESS      = 8;
+const int kSTATE_BAT             = 0;
+const int kSTATE_COIL            = 1;
+const int kSTATE_POWER           = 2;
+const int kSTATE_RESISTANCE      = 3;
+const int kSTATE_MATERIAL        = 4;
+const int kSTATE_TEMPERATURE     = 5;
+const int kSTATE_VOLTAGEDROP     = 6;
+const int kSTATE_READER          = 7;
+const int kSTATE_ADDRESS         = 8;
 
 // Coil Materials
 const int kMaterial_SS304        = 0;
@@ -87,21 +87,19 @@ const int kMaterial_NiFe30       = 7;
 const int kMaterial_Kanthal_A1   = 8;
 const int kMaterial_Kanthal_A    = 9;
 
+// Coil Materials TCR
+const float kCoeff_SS304         = 0.00105;
+const float kCoeff_SS316         = 0.00094;
+const float kCoeff_SS317         = 0.00088;
+const float kCoeff_SS430         = 0.00138;
+const float kCoeff_Ni200         = 0.006;
+const float kCoeff_Ti            = 0.0035;
+const float kCoeff_Tungsten      = 0.0045;
+const float kCoeff_NiFe30        = 0.0032;
+const float kCoeff_Kanthal_A1    = 0.000002;  // A1/APM
+const float kCoeff_Kanthal_A     = 0.000053;  // A/AE/AF/D
 
-const float kCoeff_SS304      = 0.00105;
-const float kCoeff_SS316      = 0.00094;
-const float kCoeff_SS317      = 0.00088;
-const float kCoeff_SS430      = 0.00138;
-const float kCoeff_Ni200      = 0.006;
-const float kCoeff_Ti         = 0.0035;
-const float kCoeff_Tungsten   = 0.0045;
-const float kCoeff_NiFe30     = 0.0032;
-const float kCoeff_Kanthal_A1 = 0.000002;  // A1/APM
-const float kCoeff_Kanthal_A  = 0.000053;  // A/AE/AF/D
-
-const float kAmplifier_Factor  = 1;  // For the instrumentation amplifier - to be set later
-
-const int kNumMaterials = 10;    
+const int kNumMaterials          = 10;    
 const float kTCRs[kNumMaterials] = 
 {
   kCoeff_SS304, 
@@ -116,6 +114,9 @@ const float kTCRs[kNumMaterials] =
   kCoeff_Kanthal_A 
 };
 
+// Amplication of current measurment
+const float kAmplifier_Factor    = 1;  // For the instrumentation amplifier - to be set later
+
 // initialize the library with the numbers of the interface pins
 #if defined (__Using_DFRobot_1602_LCD__)
 LiquidCrystalFast lcd(8, 255,  9,  4,  5,  6, 7);   // For DFRobot 1602 shield
@@ -123,21 +124,23 @@ LiquidCrystalFast lcd(8, 255,  9,  4,  5,  6, 7);   // For DFRobot 1602 shield
 LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);   // Original GhettoVape III wiring
 #endif
 // LCD pins:          RS  RW  EN  D4 D5  D6 D7
+
+// Create a button
 MomentaryButton button(secondButton);
 
 const char speedMessage[] = {"Vape on it!!!"}; // use this form
 
 // EEPROM addresses
-const int EE_voltageAddress = 0;
-const int EE_programAddress = 2;
-const int EE_resistanceAddress = 4;
-const int EE_powerAddress = 6;
-const int EE_coilVoltageDropAddress = 8;
-const int EE_batteryVoltageDropAddress = 10;
-const int EE_programVoltageDropAddress = 12;
-const int EE_programMaterialAddress = 14;
-const int EE_materialAddress = 16;
-const int EE_temperatureAddress = 18;
+const int EE_programAddress             =  0;
+const int EE_voltageAddress             =  2;
+const int EE_resistanceAddress          =  4;
+const int EE_powerAddress               =  6;
+const int EE_coilVoltageDropAddress     =  8;
+const int EE_programVoltageDropAddress  = 10;
+const int EE_batteryVoltageDropAddress  = 12;
+const int EE_programMaterialAddress     = 14;
+const int EE_materialAddress            = 16;
+const int EE_temperatureAddress         = 18;
 
 
 //const int numStates = 9;                 // not used
