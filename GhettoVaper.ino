@@ -3,7 +3,21 @@
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
 
+/* Problems:
+ * 
+ * 1. You have to wait for the Arduino to boot, before each vape
+ * 2. Need to be able to select coil resistance, R_coil
+ * 3. You can't measure the power yet - need to read voltage below coil, on A1 and then P=(A0-A1)*(A0-A1)/R_Coil
+ * 
+ * 
+ * Can modify switch S1 to be a toggle switch, so Arduino is always on and then S2 still controls the vape, with a hold, but multiple switches select the "mode select" mode
+ */
 
+ /* Changes:
+  *  S2 push to high
+  *  Added defines
+  */
+ 
 /*
  
  The circuit:
@@ -26,6 +40,12 @@
  
  */
 
+//
+
+#define __S2_To_HIGH__
+//#define __S2_To_LOW__  // default to this, as original
+//#define __MULTI_PUSH_S2__
+
 // include the library code:
 
 #define fetPin        11
@@ -43,15 +63,25 @@ LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);
 // LCD pins:          RS  RW  EN  D4 D5  D6 D7
 MomentaryButton button(secondButton);
 
-const char speedMessage[] = {"We the people of the United States, in order to form a more perfect union, establish justice, insure domestic tranquility, provide for the common defense, promote the general welfare, and secure the blessings of liberty to ourselves and our posterity, do ordain and establish this Constitution for the United States of America."}; // use this form
+const char speedMessage[] = {"Vape on it!!!"}; // use this form
 
 #define EE_voltageAddress 0
 #define EE_programAddress 2
-#define numStates 3
+#define EE_resistanceAddress 4
+#define EE_powerAddress 6
+//#define numStates 5                 // not used
+#define minResistance 0.0
+#define maxResistance 2.0
+#define numResistanceSteps 20
+#define stepResistanceWeight (maxResistance - minResistance)/numResistanceSteps
+#define minPower 0.0
+#define maxPower 2.0
+#define numPowerSteps 20
+#define stepPowerWeight (maxPower - minPower)/numResistanceSteps
 #define minVoltage 1.0
 #define maxVoltage 4.2
-#define numSteps 20
-#define stepWeight (maxVoltage - minVoltage)/numSteps
+#define numVoltageSteps 20
+#define stepVoltageWeight (maxVoltage - minVoltage)/numVoltageSteps
 #define numProgs 3
 #define interval 100
 
@@ -318,12 +348,29 @@ void setup() {
 }
 
 void loop() {
-  if(!digitalRead(secondButton)){
+
+//#if defined (__S2_To_LOW__)
+// For push S2 to LOW
+//  if(!digitalRead(secondButton)){   // if S2 is held
+//    stateMachine();
+//  }
+//  else{                             // if S2 is not held
+
+#if defined (__S2_To_HIGH__)
+// For push S2 to HIGH
+if(digitalRead(secondButton)){      // if S2 is held
+#elif defined (__MULTI_PUSH_S2__)
+// For multi-push S2
+if(!digitalRead(secondButton)){   // if S2 is clicked five times
+#else
+// For push S2 to LOW - default, as original
+  if(!digitalRead(secondButton)){   // if S2 is held
+#endif
     stateMachine();
   }
-  else{
-    desiredVoltage = (minVoltage + EEPROM.read(EE_voltageAddress)*stepWeight)*255/(analogRead(batteryPin)*5.25/1024);
-    if(minVoltage + EEPROM.read(EE_voltageAddress)*stepWeight > analogRead(batteryPin)*5.25/1024)
+  else{                             // if S2 does not meet the if
+    desiredVoltage = (minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight)*255/(analogRead(batteryPin)*5.25/1024);
+    if(minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight > analogRead(batteryPin)*5.25/1024)
       desiredVoltage = 255;
     analogWrite(fetPin, desiredVoltage);
 
@@ -377,64 +424,125 @@ void stateMachine(){
   while(true){
     switch(state){
 
-      case(0):
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("Battery Voltage:");
-      lcd.setCursor(0,1);
-      lcd.print(analogRead(batteryPin)*5.2/1024);
-      lcd.print(" volts");
-      button.check();
-      if(button.wasHeld())
-        state = 1;
-      break;
-
-      case(1):
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("Coil Voltage:");
-      lcd.setCursor(0,1);
-      lcd.print(minVoltage + EEPROM.read(EE_voltageAddress)*stepWeight);
-      lcd.print(" volts");
-      button.check();
-      if(button.wasClicked())
-        EEPROM.write(EE_voltageAddress, (EEPROM.read(EE_voltageAddress)+1)%numSteps);
-      if(button.wasHeld())
-        state = 2;
-      break;
-
-      case(2):
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("LCD Program:");
-      lcd.setCursor(0,1);
-      switch(EEPROM.read(EE_programAddress)){
-        case(0):
-        lcd.print("JUICE");
-        break;
-        case(1):
-        lcd.print("FRESH");
-        break;
-        case(2):
-        lcd.print("SpeedRead");
+      case(0):  // show battery voltage
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Battery Voltage:");
+        lcd.setCursor(0,1);
+        lcd.print(analogRead(batteryPin)*5.2/1024);
+        lcd.print(" volts");
+        button.check();
+        if(button.wasHeld())
+//          state = 1;
+          state++;
         break;
       }
 
-      button.check();
-      if(button.wasClicked())
-        EEPROM.write(EE_programAddress, (EEPROM.read(EE_programAddress)+1)%numProgs);
-      if(button.wasHeld())
-        state = 3;
-      break;
+      case(1):  // adjust coil voltage
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Coil Voltage:");
+        lcd.setCursor(0,1);
+        lcd.print(minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight);
+        lcd.print(" V");
+        button.check();
+        if(button.wasClicked())
+          EEPROM.write(EE_voltageAddress, (EEPROM.read(EE_voltageAddress)+1)%numVoltageSteps);
+        if(button.wasHeld())
+//          state = 2;
+          state++;
+        break;
+      }
 
-      case(3):
-      lcd.clear();
-      lcd.setCursor(0,0);
-      lcd.print("lets fuck");
-      button.check();
-      if(button.wasHeld())
-        state = 0;
-      break;
+      case(2):  // show power - how to read and latch the A1 (voltage drop) below coil?
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Battery Voltage:");
+        lcd.setCursor(0,1);
+        lcd.print(analogRead(batteryPin)*5.2/1024);
+        lcd.print(" volts");
+        button.check();
+        if(button.wasHeld())
+//          state = 3;
+          state++;
+        break;
+      }
+
+      case(3):  // adjust coil resistance
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Coil Resistance:");
+        lcd.setCursor(0,1);
+        lcd.print(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight);
+//        lcd.print(" ohm");
+        lcd.print(132); // Ohm symbol (Omega)
+        button.check();
+        if(button.wasClicked())
+          EEPROM.write(EE_resistanceAddress, (EEPROM.read(EE_resistanceAddress)+1)%numResistanceSteps);
+        if(button.wasHeld())
+//          state = 4;
+          state++;
+        break;
+      }
+
+      case(4):  // adjust power
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Power:");
+        lcd.setCursor(0,1);
+        lcd.print(minPower + EEPROM.read(EE_powerAddress)*stepPowerWeight);
+        lcd.print(" W");
+        button.check();
+        if(button.wasClicked())
+          EEPROM.write(EE_powerAddress, (EEPROM.read(EE_powerAddress)+1)%numPowerSteps);
+        if(button.wasHeld())
+//          state = 4;
+          state++;
+        break;
+      }
+
+      case(5):
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("LCD Program:");
+        lcd.setCursor(0,1);
+        switch(EEPROM.read(EE_programAddress)){
+          case(0):
+          lcd.print("JUICE");
+          break;
+          case(1):
+          lcd.print("FRESH");
+          break;
+          case(2):
+          lcd.print("SpeedRead");
+          break;
+        }
+
+        button.check();
+        if(button.wasClicked())
+          EEPROM.write(EE_programAddress, (EEPROM.read(EE_programAddress)+1)%numProgs);
+        if(button.wasHeld())
+//          state = 6;
+          state++;
+        break;
+      }
+
+      case(6):
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("lets roll");
+        button.check();
+        if(button.wasHeld())
+          state = 0;
+        break;
+      }
     }
 
     delay(30); 
@@ -459,4 +567,3 @@ void speedRead(){
       delay(100);
   }
 }
-
