@@ -48,15 +48,29 @@
 
 // include the library code:
 
-#define fetPin        11
-#define lcd_backlight 2
-#define secondButton  10
-#define batteryPin    A0
 
-#define STATE_BAT     0
-#define STATE_COIL    1
-#define STATE_READER  2
-#define STATE_ADDRESS 3 
+// Pins
+const int fetPin             = 11;
+const int lcd_backlight       = 2;
+const int secondButton       = 10;
+const int batteryPin         = A0;
+const int coilVoltageDropPin = A1;
+
+// State Engine states
+const int kSTATE_BAT          = 0;
+const int kSTATE_COIL         = 1;
+const int kSTATE_POWER        = 2;
+const int kSTATE_RESISTANCE   = 3;
+const int kSTATE_MATERIAL     = 4;
+const int kSTATE_VOLTAGEDROP  = 5;
+const int kSTATE_READER       = 6;
+const int kSTATE_ADDRESS      = 7;
+
+// Coil Materials
+const int kMaterial_SS316 = 0;
+const int kMaterial_Ni    = 1;
+const int kMaterial_Ti    = 2;
+
 
 // initialize the library with the numbers of the interface pins
 LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);
@@ -65,25 +79,35 @@ MomentaryButton button(secondButton);
 
 const char speedMessage[] = {"Vape on it!!!"}; // use this form
 
-#define EE_voltageAddress 0
-#define EE_programAddress 2
-#define EE_resistanceAddress 4
-#define EE_powerAddress 6
-//#define numStates 5                 // not used
-#define minResistance 0.0
-#define maxResistance 2.0
-#define numResistanceSteps 20
-#define stepResistanceWeight (maxResistance - minResistance)/numResistanceSteps
-#define minPower 0.0
-#define maxPower 2.0
-#define numPowerSteps 20
-#define stepPowerWeight (maxPower - minPower)/numResistanceSteps
-#define minVoltage 1.0
-#define maxVoltage 4.2
-#define numVoltageSteps 20
-#define stepVoltageWeight (maxVoltage - minVoltage)/numVoltageSteps
-#define numProgs 3
-#define interval 100
+// EEPROM addresses
+const int EE_voltageAddress = 0;
+const int EE_programAddress = 2;
+const int EE_resistanceAddress = 4;
+const int EE_powerAddress = 6;
+const int EE_coilVoltageDropAddress = 8;
+const int EE_batteryVoltageDropAddress = 10;
+const int EE_programVoltageDropAddress = 12;
+const int EE_programMaterialAddress = 14;
+const int EE_materialAddress = 16;
+
+
+//const int numStates = 8;                 // not used
+const int minResistance = 0.0;
+const int maxResistance = 2.0;
+const int numResistanceSteps = 20;
+const int stepResistanceWeight = (maxResistance - minResistance)/numResistanceSteps;
+const int minPower = 0.0;
+const int maxPower = 2.0;
+const int numPowerSteps = 20;
+const int stepPowerWeight = (maxPower - minPower)/numResistanceSteps;
+const int minVoltage = 1.0;
+const int maxVoltage = 4.2;
+const int numVoltageSteps = 20;
+const int stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;
+const int numProgs = 3;
+const int numVoltageDropProgs = 4;
+const int numMaterialProgs = 3;
+const int interval = 100;
 
 int strPos = 0;
 int desiredVoltage;
@@ -344,7 +368,6 @@ void setup() {
   lcd.createChar(7,block);
   lcd.createChar(8,blank);
   lcd.createChar(9,cross);
-
 }
 
 void loop() {
@@ -368,51 +391,60 @@ if(!digitalRead(secondButton)){   // if S2 is clicked five times
 #endif
     stateMachine();
   }
-  else{                             // if S2 does not meet the if
+  else {                             // if S2 does not meet the if
     desiredVoltage = (minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight)*255/(analogRead(batteryPin)*5.25/1024);
     if(minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight > analogRead(batteryPin)*5.25/1024)
       desiredVoltage = 255;
     analogWrite(fetPin, desiredVoltage);
-
-    switch(EEPROM.read(EE_programAddress)){
+    EEPROM.write(EE_batteryVoltageDropAddress,analogRead(batteryPin));  // store the analogue read
+    EEPROM.write(EE_coilVoltageDropAddress,analogRead(coilVoltageDropPin));  // store the analogue read
+    
+    switch(EEPROM.read(EE_programAddress))
+    {
       case(0):
-      //JUICE
-      do{
-        customJ(0);    // displays custom 0 on the LCD
-        delay(interval);
-        customU(4);
-        delay(interval);
-        customI(7);
-        delay(interval);
-        customC(10);
-        delay(interval);
-        customE(14);
-        delay(interval);
-        lcd.clear();
-        delay(interval);
-
+      {
+        //JUICE
+        do 
+        {
+          customJ(0);    // displays custom 0 on the LCD
+          delay(interval);
+          customU(4);
+          delay(interval);
+          customI(7);
+          delay(interval);
+          customC(10);
+          delay(interval);
+          customE(14);
+          delay(interval);
+          lcd.clear();
+          delay(interval);
+        }
+        while(true);
+        break;
       }
-      while(true);
-      break;
 
       case(1):
-      do{
-        customF(0);    // displays custom 0 on the LCD
-        customR(3);
-        customE(7);
-        customS(10);
-        customH(13);
-        delay(interval);
-        lcd.clear(); 
-        delay(interval);
+      {
+        do 
+        {
+          customF(0);    // displays custom 0 on the LCD
+          customR(3);
+          customE(7);
+          customS(10);
+          customH(13);
+          delay(interval);
+          lcd.clear(); 
+          delay(interval);
+        }
+        while(true);
+        break;
       }
-      while(true);
-      break;
-
 
       case(2):
-      speedRead();
-      break;
+      {
+        speedRead();
+        break;
+      }
     }
   }
 }
@@ -424,7 +456,7 @@ void stateMachine(){
   while(true){
     switch(state){
 
-      case(0):  // show battery voltage
+      case(kSTATE_BAT):  // show battery voltage
       {
         lcd.clear();
         lcd.setCursor(0,0);
@@ -439,7 +471,7 @@ void stateMachine(){
         break;
       }
 
-      case(1):  // adjust coil voltage
+      case(kSTATE_COIL):  // adjust coil voltage
       {
         lcd.clear();
         lcd.setCursor(0,0);
@@ -456,22 +488,24 @@ void stateMachine(){
         break;
       }
 
-      case(2):  // show power - how to read and latch the A1 (voltage drop) below coil?
+      case(kSTATE_POWER):  // adjust power (redundant)
       {
         lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("Battery Voltage:");
+        lcd.print("Power:");
         lcd.setCursor(0,1);
-        lcd.print(analogRead(batteryPin)*5.2/1024);
-        lcd.print(" volts");
+        lcd.print(minPower + EEPROM.read(EE_powerAddress)*stepPowerWeight);
+        lcd.print(" W");
         button.check();
+        if(button.wasClicked())
+          EEPROM.write(EE_powerAddress, (EEPROM.read(EE_powerAddress)+1)%numPowerSteps);
         if(button.wasHeld())
 //          state = 3;
           state++;
         break;
       }
 
-      case(3):  // adjust coil resistance
+      case(kSTATE_RESISTANCE):  // adjust coil resistance
       {
         lcd.clear();
         lcd.setCursor(0,0);
@@ -489,24 +523,97 @@ void stateMachine(){
         break;
       }
 
-      case(4):  // adjust power
+      case(kSTATE_MATERIAL):  // adjust material
       {
         lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("Power:");
+        lcd.print("LCD Program:");
         lcd.setCursor(0,1);
-        lcd.print(minPower + EEPROM.read(EE_powerAddress)*stepPowerWeight);
-        lcd.print(" W");
+        switch(EEPROM.read(EE_materialAddress))
+        {
+          case(kMaterial_SS316):
+            lcd.print("SS 316");
+            break;
+          case(kMaterial_Ni):
+            lcd.print("Ni");
+            break;
+          case(kMaterial_Ti):
+            lcd.print("Ti");
+            break;
+        }
+
         button.check();
         if(button.wasClicked())
-          EEPROM.write(EE_powerAddress, (EEPROM.read(EE_powerAddress)+1)%numPowerSteps);
+          EEPROM.write(EE_materialAddress, (EEPROM.read(EE_materialAddress)+1)%numMaterialProgs);
         if(button.wasHeld())
-//          state = 4;
+//          state = 5;
           state++;
         break;
       }
 
-      case(5):
+      case(kSTATE_VOLTAGEDROP):  // show coil voltage drop and power
+      {
+        // Use state machine to show:
+        switch(EEPROM.read(EE_programVoltageDropAddress)){
+          case(0):
+          {
+        //   Print Battery Voltage when vaping
+            lcd.clear();
+            lcd.setCursor(0,0);
+            lcd.print("Battery Voltage:");
+            lcd.setCursor(0,1);
+            lcd.print(EEPROM.read(EE_batteryVoltageDropAddress)*5.2/1024);
+            lcd.print(" V");
+            break;
+          }
+          
+          case(1):
+          {
+            //   Print Voltage below coil
+            lcd.clear();
+            lcd.setCursor(0,0);
+            lcd.print("Coil Voltage:");
+            lcd.setCursor(0,1);
+            lcd.print(EEPROM.read(EE_coilVoltageDropAddress)*5.2/1024);
+            lcd.print(" V");
+            break;
+          }
+          
+          case(2):
+          {
+            //   Print  Voltage Drop across coil
+            lcd.clear();
+            lcd.setCursor(0,0);
+            lcd.print("Coil Voltage Drop:");
+            lcd.setCursor(0,1);
+            lcd.print((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024);
+            lcd.print(" V");
+            break;
+          }
+          
+          case(3):
+          {
+            //   Print power through coil
+            lcd.clear();
+            lcd.setCursor(0,0);
+            lcd.print("Coil Power:");
+            lcd.setCursor(0,1);
+            lcd.print((((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024)*((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024))/(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight));
+            lcd.print(" W");
+            break;
+          }
+        }
+       
+        button.check();
+        if(button.wasClicked())
+          EEPROM.write(EE_programVoltageDropAddress, (EEPROM.read(EE_programVoltageDropAddress)+1)%numVoltageDropProgs);
+        if(button.wasHeld())
+//          state = 6;
+          state++;
+        break;
+      }
+
+      case(kSTATE_READER):
       {
         lcd.clear();
         lcd.setCursor(0,0);
@@ -514,26 +621,26 @@ void stateMachine(){
         lcd.setCursor(0,1);
         switch(EEPROM.read(EE_programAddress)){
           case(0):
-          lcd.print("JUICE");
-          break;
+            lcd.print("JUICE");
+            break;
           case(1):
-          lcd.print("FRESH");
-          break;
+            lcd.print("FRESH");
+            break;
           case(2):
-          lcd.print("SpeedRead");
-          break;
+            lcd.print("SpeedRead");
+            break;
         }
 
         button.check();
         if(button.wasClicked())
           EEPROM.write(EE_programAddress, (EEPROM.read(EE_programAddress)+1)%numProgs);
         if(button.wasHeld())
-//          state = 6;
+//          state = 7;
           state++;
         break;
       }
 
-      case(6):
+      case(kSTATE_ADDRESS):
       {
         lcd.clear();
         lcd.setCursor(0,0);
@@ -567,3 +674,4 @@ void speedRead(){
       delay(100);
   }
 }
+
