@@ -42,19 +42,27 @@
  */
 
 // Switch S2 behaviour
-
 #define __S2_To_HIGH__
 //#define __S2_To_LOW__  // default to this, as original
 //#define __MULTI_PUSH_S2__
+
+// Testing with DFRobot 1602 display
+#define __Using_DFRobot_1602_LCD__
 
 
 // Pins
 const int fetPin             = 11;
 const int lcd_backlight       = 2;
-//const int secondButton       = 10; // Original
+#if defined (__Using_DFRobot_1602_LCD__)
+const int secondButton       = 10;  // Original
+const int batteryPin         = A0;  // Original
+#else
 const int secondButton       = 12;  // For DR Robot 16x02 display
-const int batteryPin         = A0;
+const int batteryPin         = A3;  // For DR Robot 16x02 display
+#endif
 const int coilVoltageDropPin = A1;
+const int currentMeasurePin  = A2;
+const float currentMeasureR  = 0.5;  //Ohms - Resistance of current measuring resistor
 
 // State Engine states
 const int kSTATE_BAT          = 0;
@@ -91,11 +99,29 @@ const float kCoeff_NiFe30     = 0.0032;
 const float kCoeff_Kanthal_A1 = 0.000002;  // A1/APM
 const float kCoeff_Kanthal_A  = 0.000053;  // A/AE/AF/D
 
+const float kAmplifier_Factor  = 1;  // For the instrumentation amplifier - to be set later
 
+const int kNumMaterials = 10;    
+const float kTCRs[kNumMaterials] = 
+{
+  kCoeff_SS304, 
+  kCoeff_SS316, 
+  kCoeff_SS317, 
+  kCoeff_SS430, 
+  kCoeff_Ni200, 
+  kCoeff_Ti, 
+  kCoeff_Tungsten, 
+  kCoeff_NiFe30, 
+  kCoeff_Kanthal_A1, 
+  kCoeff_Kanthal_A 
+};
 
 // initialize the library with the numbers of the interface pins
+#if defined (__Using_DFRobot_1602_LCD__)
 LiquidCrystalFast lcd(8, 255,  9,  4,  5,  6, 7);   // For DFRobot 1602 shield
-//LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);   // Original GhettoVape III wiring
+#else
+LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);   // Original GhettoVape III wiring
+#endif
 // LCD pins:          RS  RW  EN  D4 D5  D6 D7
 MomentaryButton button(secondButton);
 
@@ -134,7 +160,7 @@ const float stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;
 // Progs are the number of sub settings for a particular function (or State)
 const int numProgs = 3;      // Used to cycle (wrap around) Progs
 const int numVoltageDropProgs = 4;      // Used to cycle (wrap around) VoltageDropProgs
-const int numMaterialProgs = 10;      // Used to cycle (wrap around) MaterialProgs
+const int numMaterialProgs = kNumMaterials;      // Used to cycle (wrap around) MaterialProgs
 const int interval = 100;
 
 int strPos = 0;
@@ -151,12 +177,15 @@ long startTime = 0;
 
 void setup() {
 
+// Ignore this
 //  pinMode (secondButton, INPUT);
 //#if defined (__S2_To_HIGH__)
 //  digitalWrite(secondButton, LOW);
 //#else
 //  digitalWrite(secondButton, HIGH);
 //#endif
+
+
   // set up the LCD's number of rows and columns: 
   lcd.begin(16, 2);
 
@@ -164,8 +193,13 @@ void setup() {
   pinMode(lcd_backlight, OUTPUT);
   analogWrite(lcd_backlight, 255);
 
-  button.setup(); // set as INPUT, set HIGH
-  button.setThreshold(300); //1 sec between short and long hold
+  // Set up analogue input pins:
+  pinMode(batteryPin, INPUT);
+  pinMode(coilVoltageDropPin, INPUT);
+  pinMode(currentMeasurePin, INPUT);
+
+  button.setup();            // set as INPUT, set HIGH (need to change this to LOW, for modified schematic)
+  button.setThreshold(300);  // 1 sec between short and long hold
 
   // assigns each segment a write number
   lcd.createChar(0, LT);
@@ -182,32 +216,34 @@ void setup() {
 
 void loop() {
 
-//#if defined (__S2_To_LOW__)
-// For push S2 to LOW
-//  if(!digitalRead(secondButton)){   // if S2 is held
-//    stateMachine();
-//  }
-//  else{                             // if S2 is not held
-
 #if defined (__S2_To_HIGH__)
-// For push S2 to HIGH
-if(digitalRead(secondButton)){      // if S2 is held
+  // For push S2 to HIGH
+  if(digitalRead(secondButton)) {      // if S2 is held
 #elif defined (__MULTI_PUSH_S2__)
-// For multi-push S2
-if(!digitalRead(secondButton)){   // if S2 is clicked five times
+  // For multi-push S2
+  if(!digitalRead(secondButton)) {   // if S2 is clicked five times
 #else
-// For push S2 to LOW - default, as original
-  if(!digitalRead(secondButton)){   // if S2 is held
+  // For push S2 to LOW - default, as original
+  if(!digitalRead(secondButton)) {   // if S2 is held
 #endif
     stateMachine();
   }
   else {                             // if S2 does not meet the if
     desiredVoltage = (minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight)*255/(analogRead(batteryPin)*5.25/1024);
-    if (minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight > analogRead(batteryPin)*5.25/1024)
-      desiredVoltage = 255;
-    analogWrite(fetPin, desiredVoltage);
+    if (minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight > analogRead(batteryPin)*5.25/1024)  // if there isn't sufficient battery life...
+      desiredVoltage = 255;                                                                                // then just supply the maximum
+
+    analogWrite(fetPin, desiredVoltage);                                                                   // Activate PWM to trigger NFET
+
+    // Read the voltage across the coil
     EEPROM.write(EE_batteryVoltageDropAddress,analogRead(batteryPin));  // store the analogue read
     EEPROM.write(EE_coilVoltageDropAddress,analogRead(coilVoltageDropPin));  // store the analogue read
+
+    // For power control, and TCR
+    float currentInCoil = (analogRead(currentMeasurePin)*5.25)/(1024*kAmplifier_Factor*currentMeasureR);
+    float resistanceOfVapingCoil =  ((EEPROM.read(EE_batteryVoltageDropAddress) - EEPROM.read(EE_coilVoltageDropAddress))*5.25* currentInCoil)/1024;
+    float resistanceOfVapingCoilDelta = resistanceOfVapingCoil - (minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight);
+    float temperatureOfCoil = 23 + (resistanceOfVapingCoilDelta/kTCRs[EEPROM.read(EE_materialAddress)]);
     
     switch(EEPROM.read(EE_programAddress))
     {
