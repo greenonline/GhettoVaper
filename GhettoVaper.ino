@@ -66,9 +66,15 @@ const int kSTATE_READER       = 6;
 const int kSTATE_ADDRESS      = 7;
 
 // Coil Materials
-const int kMaterial_SS316 = 0;
-const int kMaterial_Ni    = 1;
-const int kMaterial_Ti    = 2;
+const int kMaterial_SS316     = 0;
+const int kMaterial_Ni200     = 1;
+const int kMaterial_Ti        = 2;
+const int kMaterial_NiFe30    = 3;
+
+const float kCoeff_SS316      = 0.00094;
+const float kCoeff_Ni200      = 0.006;
+const float kCoeff_Ti         = 0.0035;
+const float kCoeff_NiFe30     = 0.0032;
 
 
 // initialize the library with the numbers of the interface pins
@@ -105,7 +111,7 @@ const int numVoltageSteps = 20;
 const int stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;
 const int numProgs = 3;
 const int numVoltageDropProgs = 4;
-const int numMaterialProgs = 3;
+const int numMaterialProgs = 4;
 const int interval = 100;
 
 int strPos = 0;
@@ -132,7 +138,7 @@ void setup() {
   button.setup(); // set as INPUT, set HIGH
   button.setThreshold(300); //1 sec between short and long hold
 
-  // assignes each segment a write number
+  // assigns each segment a write number
   lcd.createChar(0,LT);
   lcd.createChar(1,UB);
   lcd.createChar(2,RT);
@@ -168,7 +174,7 @@ if(!digitalRead(secondButton)){   // if S2 is clicked five times
   }
   else {                             // if S2 does not meet the if
     desiredVoltage = (minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight)*255/(analogRead(batteryPin)*5.25/1024);
-    if(minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight > analogRead(batteryPin)*5.25/1024)
+    if (minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight > analogRead(batteryPin)*5.25/1024)
       desiredVoltage = 255;
     analogWrite(fetPin, desiredVoltage);
     EEPROM.write(EE_batteryVoltageDropAddress,analogRead(batteryPin));  // store the analogue read
@@ -309,11 +315,14 @@ void stateMachine(){
           case(kMaterial_SS316):
             lcd.print("SS 316");
             break;
-          case(kMaterial_Ni):
-            lcd.print("Ni");
+          case(kMaterial_Ni200):
+            lcd.print("Ni200");
             break;
           case(kMaterial_Ti):
             lcd.print("Ti");
+            break;
+          case(kMaterial_NiFe30):
+            lcd.print("NiFe30");
             break;
         }
 
