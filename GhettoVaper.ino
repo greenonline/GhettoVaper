@@ -67,15 +67,29 @@ const int kSTATE_READER       = 6;
 const int kSTATE_ADDRESS      = 7;
 
 // Coil Materials
-const int kMaterial_SS316     = 0;
-const int kMaterial_Ni200     = 1;
-const int kMaterial_Ti        = 2;
-const int kMaterial_NiFe30    = 3;
+const int kMaterial_SS304        = 0;
+const int kMaterial_SS316        = 1;
+const int kMaterial_SS317        = 2;
+const int kMaterial_SS430        = 3;
+const int kMaterial_Ni200        = 4;
+const int kMaterial_Ti           = 5;
+const int kMaterial_Tungsten     = 6;
+const int kMaterial_NiFe30       = 7;
+const int kMaterial_Kanthal_A1   = 8;
+const int kMaterial_Kanthal_A    = 9;
 
+
+const float kCoeff_SS304      = 0.00105;
 const float kCoeff_SS316      = 0.00094;
+const float kCoeff_SS317      = 0.00088;
+const float kCoeff_SS430      = 0.00138;
 const float kCoeff_Ni200      = 0.006;
 const float kCoeff_Ti         = 0.0035;
+const float kCoeff_Tungsten   = 0.0045;
 const float kCoeff_NiFe30     = 0.0032;
+const float kCoeff_Kanthal_A1 = 0.000002;  // A1/APM
+const float kCoeff_Kanthal_A  = 0.000053;  // A/AE/AF/D
+
 
 
 // initialize the library with the numbers of the interface pins
@@ -114,7 +128,7 @@ const int numVoltageSteps = 20;
 const float stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;
 const int numProgs = 3;
 const int numVoltageDropProgs = 4;
-const int numMaterialProgs = 4;
+const int numMaterialProgs = 10;
 const int interval = 100;
 
 int strPos = 0;
@@ -326,8 +340,17 @@ void stateMachine(){
         lcd.setCursor(0,1);
         switch(EEPROM.read(EE_materialAddress))
         {
+          case(kMaterial_SS304):
+            lcd.print("SS 304");
+            break;
           case(kMaterial_SS316):
             lcd.print("SS 316");
+            break;
+          case(kMaterial_SS317):
+            lcd.print("SS 317");
+            break;
+          case(kMaterial_SS430):
+            lcd.print("SS 430");
             break;
           case(kMaterial_Ni200):
             lcd.print("Ni200");
@@ -335,8 +358,17 @@ void stateMachine(){
           case(kMaterial_Ti):
             lcd.print("Ti");
             break;
+          case(kMaterial_Tungsten):
+            lcd.print("Tungsten");
+            break;
           case(kMaterial_NiFe30):
             lcd.print("NiFe30");
+            break;
+          case(kMaterial_Kanthal_A1):
+            lcd.print("Kanthal A/APM");
+            break;
+          case(kMaterial_Kanthal_A):
+            lcd.print("Kanthal A/AE/AF/D");
             break;
         }
 
