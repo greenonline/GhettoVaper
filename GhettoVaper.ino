@@ -51,7 +51,8 @@
 // Pins
 const int fetPin             = 11;
 const int lcd_backlight       = 2;
-const int secondButton       = 10;
+//const int secondButton       = 10; // Original
+const int secondButton       = 12;  // For DR Robot 16x02 display
 const int batteryPin         = A0;
 const int coilVoltageDropPin = A1;
 
@@ -78,7 +79,8 @@ const float kCoeff_NiFe30     = 0.0032;
 
 
 // initialize the library with the numbers of the interface pins
-LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);
+LiquidCrystalFast lcd(8, 255,  9,  4,  5,  6, 7);   // For DFRobot 1602 shield
+//LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);   // Original GhettoVape III wiring
 // LCD pins:          RS  RW  EN  D4 D5  D6 D7
 MomentaryButton button(secondButton);
 
@@ -97,18 +99,19 @@ const int EE_materialAddress = 16;
 
 
 //const int numStates = 8;                 // not used
-const int minResistance = 0.0;
-const int maxResistance = 2.0;
+const float minResistance = 0.0;
+const float maxResistance = 2.0;
 const int numResistanceSteps = 20;
-const int stepResistanceWeight = (maxResistance - minResistance)/numResistanceSteps;
-const int minPower = 0.0;
-const int maxPower = 2.0;
-const int numPowerSteps = 20;
-const int stepPowerWeight = (maxPower - minPower)/numResistanceSteps;
-const int minVoltage = 1.0;
-const int maxVoltage = 4.2;
+const float stepResistanceWeight = (maxResistance - minResistance)/numResistanceSteps;
+const float minPower = 0.0;
+const float maxPower = 70.0;
+const int numPowerSteps = 70;
+const float
+stepPowerWeight = (maxPower - minPower)/numPowerSteps;  //shoud be float
+const float minVoltage = 1.0;
+const float maxVoltage = 4.2;
 const int numVoltageSteps = 20;
-const int stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;
+const float stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;
 const int numProgs = 3;
 const int numVoltageDropProgs = 4;
 const int numMaterialProgs = 4;
@@ -128,6 +131,12 @@ long startTime = 0;
 
 void setup() {
 
+//  pinMode (secondButton, INPUT);
+//#if defined (__S2_To_HIGH__)
+//  digitalWrite(secondButton, LOW);
+//#else
+//  digitalWrite(secondButton, HIGH);
+//#endif
   // set up the LCD's number of rows and columns: 
   lcd.begin(16, 2);
 
@@ -139,16 +148,16 @@ void setup() {
   button.setThreshold(300); //1 sec between short and long hold
 
   // assigns each segment a write number
-  lcd.createChar(0,LT);
-  lcd.createChar(1,UB);
-  lcd.createChar(2,RT);
-  lcd.createChar(3,LL);
-  lcd.createChar(4,LB);
-  lcd.createChar(5,LR);
-  lcd.createChar(6,MB);
-  lcd.createChar(7,block);
-  lcd.createChar(8,blank);
-  lcd.createChar(9,cross);
+  lcd.createChar(0, LT);
+  lcd.createChar(1, UB);
+  lcd.createChar(2, RT);
+  lcd.createChar(3, LL);
+  lcd.createChar(4, LB);
+  lcd.createChar(5, LR);
+  lcd.createChar(6, MB);
+  lcd.createChar(7, block);
+  lcd.createChar(8, blank);
+  lcd.createChar(9, cross);
 }
 
 void loop() {
@@ -235,8 +244,8 @@ void stateMachine(){
   delay(50);
 
   while(true){
-    switch(state){
-
+    switch(state) 
+    {
       case(kSTATE_BAT):  // show battery voltage
       {
         lcd.clear();
@@ -244,7 +253,7 @@ void stateMachine(){
         lcd.print("Battery Voltage:");
         lcd.setCursor(0,1);
         lcd.print(analogRead(batteryPin)*5.2/1024);
-        lcd.print(" volts");
+        lcd.print(" V");
         button.check();
         if(button.wasHeld())
 //          state = 1;
@@ -293,8 +302,8 @@ void stateMachine(){
         lcd.print("Coil Resistance:");
         lcd.setCursor(0,1);
         lcd.print(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight);
-//        lcd.print(" ohm");
-        lcd.print(132); // Ohm symbol (Omega)
+//        lcd.print((char)244); // Ohm symbol (Omega)
+        lcd.print(" \364"); // Ohm symbol (Omega) octal (244 in decimal)
         button.check();
         if(button.wasClicked())
           EEPROM.write(EE_resistanceAddress, (EEPROM.read(EE_resistanceAddress)+1)%numResistanceSteps);
@@ -308,7 +317,7 @@ void stateMachine(){
       {
         lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("LCD Program:");
+        lcd.print("Coil Material:");
         lcd.setCursor(0,1);
         switch(EEPROM.read(EE_materialAddress))
         {
