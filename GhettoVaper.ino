@@ -374,7 +374,7 @@ void stateMachine(){
             lcd.print("Kanthal A/APM");
             break;
           case(kMaterial_Kanthal_A):
-            lcd.print("Kanthal A/AE/AF/D");
+            lcd.print("Kanthal A/AE+F/D");
             break;
         }
 
@@ -425,7 +425,7 @@ void stateMachine(){
             //   Print Voltage below coil
             lcd.clear();
             lcd.setCursor(0,0);
-            lcd.print("Coil Voltage:");
+            lcd.print("FET Voltage:");
             lcd.setCursor(0,1);
             lcd.print(EEPROM.read(EE_coilVoltageDropAddress)*5.2/1024);
             lcd.print(" V");
@@ -437,7 +437,7 @@ void stateMachine(){
             //   Print  Voltage Drop across coil
             lcd.clear();
             lcd.setCursor(0,0);
-            lcd.print("Coil Voltage Drop:");
+            lcd.print("Coil Voltage:");
             lcd.setCursor(0,1);
             lcd.print((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024);
             lcd.print(" V");
