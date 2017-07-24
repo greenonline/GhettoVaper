@@ -180,15 +180,6 @@ long startTime = 0;
 
 void setup() {
 
-// Ignore this
-//  pinMode (secondButton, INPUT);
-//#if defined (__S2_To_HIGH__)
-//  digitalWrite(secondButton, LOW);
-//#else
-//  digitalWrite(secondButton, HIGH);
-//#endif
-
-
   // set up the LCD's number of rows and columns: 
   lcd.begin(16, 2);
 
