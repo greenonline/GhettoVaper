@@ -288,7 +288,12 @@ void stateMachine(){
         lcd.print(" W");
         button.check();
         if(button.wasClicked())
+        {
           EEPROM.write(EE_powerAddress, (EEPROM.read(EE_powerAddress)+1)%numPowerSteps);
+          // Calculate the voltage required
+          float voltsForPower = sqrt((minPower + EEPROM.read(EE_powerAddress)*stepPowerWeight)*(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight));
+          EEPROM.write(EE_voltageAddress, (voltsForPower-minVoltage)/stepVoltageWeight);
+        }
         if(button.wasHeld())
 //          state = 3;
           state++;
@@ -387,11 +392,14 @@ void stateMachine(){
           case(3):
           {
             //   Print power through coil
+            int batteryVoltageDrop = EEPROM.read(EE_batteryVoltageDropAddress);
+            int coilVoltageDrop = EEPROM.read(EE_coilVoltageDropAddress);
             lcd.clear();
             lcd.setCursor(0,0);
             lcd.print("Coil Power:");
             lcd.setCursor(0,1);
-            lcd.print((((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024)*((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024))/(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight));
+//            lcd.print((((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024)*((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024))/(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight));
+            lcd.print((((batteryVoltageDrop-coilVoltageDrop)*5.2/1024)*((batteryVoltageDrop-coilVoltageDrop)*5.2/1024))/(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight)); // slightly faster
             lcd.print(" W");
             break;
           }
