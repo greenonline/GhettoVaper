@@ -151,9 +151,9 @@ const float kTCRs[kNumMaterials] =
 const float kAmplifier_Factor    = 1;  // For the instrumentation amplifier - to be set later
 
 // Temperature Units
-const float kTemperatureUnits_F  = 0; 
-const float kTemperatureUnits_C  = 1; 
-const float kTemperatureUnits_K  = 2; 
+const int kTemperatureUnits_F  = 0; 
+const int kTemperatureUnits_C  = 1; 
+const int kTemperatureUnits_K  = 2; 
 
 // initialize the library with the numbers of the interface pins
 #if defined (__Using_DFRobot_1602_LCD__)
@@ -181,7 +181,7 @@ const int EE_materialAddress            = 16;
 const int EE_temperatureAddress         = 18;
 const int EE_temperatureUnitsAddress    = 20;
 const int EE_defaultsAddress            = 22;
-const int EE_defaultsSureAddress            = 24;
+const int EE_defaultsSureAddress        = 24;
 
 
 const float minResistance = 0.0;
@@ -194,8 +194,8 @@ const int   numPowerSteps = 70;
 const float stepPowerWeight = (maxPower - minPower)/numPowerSteps; 
 const float minTemperature = 0.0;
 const float maxTemperature = 500.0;
-const int   numTemperatureSteps = 70;
-const int   numTemperatureUnitsSteps = 2;
+const int   numTemperatureSteps = 50;
+const int   numTemperatureUnitsSteps = 3;  // °C, °F and K
 const float stepTemperatureWeight = (maxTemperature - minTemperature)/numTemperatureSteps; 
 const float minVoltage = 1.0;
 const float maxVoltage = 4.2;
@@ -475,13 +475,26 @@ void stateMachine(){
         lcd.setCursor(0,0);
         lcd.print("Coil Temperature:");
         lcd.setCursor(0,1);
-        if (EEPROM.read(EE_temperatureUnitsAddress)) {
-          lcd.print(minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight);
-          lcd.print(" \337C"); // degree symbol (Omega) octal (244 in decimal)
-        }
-        else {
-          lcd.print(((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)*1.8) + 32);
-          lcd.print(" \337F"); 
+        switch (EEPROM.read(EE_temperatureUnitsAddress))
+        {
+          case(kTemperatureUnits_F):
+          {
+            lcd.print(((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)*1.8) + 32);
+            lcd.print(" \337F"); 
+            break;
+          }  
+          case(kTemperatureUnits_C):
+          {
+            lcd.print(minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight);
+            lcd.print(" \337C"); // degree symbol (Omega) octal (244 in decimal)
+            break;                  
+          }
+          case(kTemperatureUnits_K):
+          {
+            lcd.print((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)+273.15);
+            lcd.print(" K"); // degree symbol (Omega) octal (244 in decimal)   
+            break;               
+          }
         }
         button.check();
         if(button.wasClicked())
@@ -498,10 +511,25 @@ void stateMachine(){
         lcd.setCursor(0,0);
         lcd.print("Temperature in:");
         lcd.setCursor(0,1);
-        if (EEPROM.read(EE_temperatureUnitsAddress))
-          lcd.print(" \337C"); // 1 = Centigrade
-        else
-          lcd.print(" \337F"); // 0 = Fahrenheit
+        switch (EEPROM.read(EE_temperatureUnitsAddress))
+        {
+          case(kTemperatureUnits_F):
+          {
+            lcd.print(" \337F"); // 0 = Fahrenheit
+            break;
+          }
+          case(kTemperatureUnits_C):
+          {
+            lcd.print(" \337C"); // 1 = Centigrade
+            break;
+          }
+          case(kTemperatureUnits_K):
+          {
+            lcd.print(" K");     // 2 = Kelvin    
+            break;
+                          
+          }
+        }
         button.check();
         if(button.wasClicked())
           EEPROM.write(EE_temperatureUnitsAddress, (EEPROM.read(EE_temperatureUnitsAddress)+1)%numTemperatureUnitsSteps);
