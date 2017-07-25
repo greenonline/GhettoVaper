@@ -17,6 +17,12 @@
  /* Changes:
   *  S2 push to high
   *  Added defines
+  *  
+  *  To do: share compiler defs across files
+  *  Welcome mssage - not just a blkank scren
+  *  adjust temp with tcrs
+  *  set temp control on toggle
+  *  juice prints badly (double "C")
   */
  
 /*
@@ -196,6 +202,11 @@ void setup() {
   button.setThreshold(300);  // 1 sec between short and long hold
 
   // assigns each segment a write number
+  // There was a problem drawing the "C" in "JUICE" with the original version
+  // However, only eight custom characters can be assigned, therefore 0=8 and 1=9 - so there are two characters too many
+  // As nothing uses character "0" (apart from "8" - the blank) - forget this
+  // A blank (8) is already defined by space
+  // the block can be replaced by other custom characters, to give stylised
   lcd.createChar(0, LT);
   lcd.createChar(1, UB);
   lcd.createChar(2, RT);
@@ -203,9 +214,10 @@ void setup() {
   lcd.createChar(4, LB);
   lcd.createChar(5, LR);
   lcd.createChar(6, MB);
-  lcd.createChar(7, block);
-  lcd.createChar(8, blank);
-  lcd.createChar(9, cross);
+  //lcd.createChar(7, block);
+  //lcd.createChar(8, blank);
+  //lcd.createChar(9, cross);
+  lcd.createChar(7, cross);
 }
 
 void loop() {
