@@ -56,55 +56,56 @@
 
 
 // Pins
-const int fetPin                 = 11;
-const int lcd_backlight          = 2;
+const int fetPin                   = 11;
+const int lcd_backlight            = 2;
 #if defined (__Using_DFRobot_1602_LCD__)
-const int secondButton           = 12;  // For DR Robot 16x02 display
-const int batteryPin             = A3;  // For DR Robot 16x02 display
+const int secondButton             = 12;  // For DR Robot 16x02 display
+const int batteryPin               = A3;  // For DR Robot 16x02 display
 #else
-const int secondButton           = 10;  // Original
-const int batteryPin             = A0;  // Original
+const int secondButton             = 10;  // Original
+const int batteryPin               = A0;  // Original
 #endif
-const int coilVoltageDropPin     = A1;
-const int currentMeasurePin      = A2;
-const float currentMeasureR      = 0.5;  //Ohms - Resistance of current measuring resistor
+const int coilVoltageDropPin       = A1;
+const int currentMeasurePin        = A2;
+const float currentMeasureR        = 0.5;  //Ohms - Resistance of current measuring resistor
 
 // State Engine states
-const int kSTATE_BAT             = 0;
-const int kSTATE_COIL            = 1;
-const int kSTATE_POWER           = 2;
-const int kSTATE_RESISTANCE      = 3;
-const int kSTATE_MATERIAL        = 4;
-const int kSTATE_TEMPERATURE     = 5;
-const int kSTATE_VOLTAGEDROP     = 6;
-const int kSTATE_READER          = 7;
-const int kSTATE_ADDRESS         = 8;
+const int kSTATE_BAT               = 0;
+const int kSTATE_COIL              = 1;
+const int kSTATE_POWER             = 2;
+const int kSTATE_RESISTANCE        = 3;
+const int kSTATE_MATERIAL          = 4;
+const int kSTATE_TEMPERATURE       = 5;
+const int kSTATE_TEMPERATURE_UNITS = 6;
+const int kSTATE_VOLTAGEDROP       = 7;
+const int kSTATE_READER            = 8;
+const int kSTATE_ADDRESS           = 9;
 
 // Coil Materials
-const int kMaterial_SS304        = 0;
-const int kMaterial_SS316        = 1;
-const int kMaterial_SS317        = 2;
-const int kMaterial_SS430        = 3;
-const int kMaterial_Ni200        = 4;
-const int kMaterial_Ti           = 5;
-const int kMaterial_Tungsten     = 6;
-const int kMaterial_NiFe30       = 7;
-const int kMaterial_Kanthal_A1   = 8;
-const int kMaterial_Kanthal_A    = 9;
+const int kMaterial_SS304          = 0;
+const int kMaterial_SS316          = 1;
+const int kMaterial_SS317          = 2;
+const int kMaterial_SS430          = 3;
+const int kMaterial_Ni200          = 4;
+const int kMaterial_Ti             = 5;
+const int kMaterial_Tungsten       = 6;
+const int kMaterial_NiFe30         = 7;
+const int kMaterial_Kanthal_A1     = 8;
+const int kMaterial_Kanthal_A      = 9;
 
 // Coil Materials TCR
-const float kCoeff_SS304         = 0.00105;
-const float kCoeff_SS316         = 0.00094;
-const float kCoeff_SS317         = 0.00088;
-const float kCoeff_SS430         = 0.00138;
-const float kCoeff_Ni200         = 0.006;
-const float kCoeff_Ti            = 0.0035;
-const float kCoeff_Tungsten      = 0.0045;
-const float kCoeff_NiFe30        = 0.0032;
-const float kCoeff_Kanthal_A1    = 0.000002;  // A1/APM
-const float kCoeff_Kanthal_A     = 0.000053;  // A/AE/AF/D
+const float kCoeff_SS304           = 0.00105;
+const float kCoeff_SS316           = 0.00094;
+const float kCoeff_SS317           = 0.00088;
+const float kCoeff_SS430           = 0.00138;
+const float kCoeff_Ni200           = 0.006;
+const float kCoeff_Ti              = 0.0035;
+const float kCoeff_Tungsten        = 0.0045;
+const float kCoeff_NiFe30          = 0.0032;
+const float kCoeff_Kanthal_A1      = 0.000002;  // A1/APM
+const float kCoeff_Kanthal_A       = 0.000053;  // A/AE/AF/D
 
-const int kNumMaterials          = 10;    
+const int kNumMaterials            = 10;    
 const float kTCRs[kNumMaterials] = 
 {
   kCoeff_SS304, 
@@ -146,6 +147,7 @@ const int EE_batteryVoltageDropAddress  = 12;
 const int EE_programMaterialAddress     = 14;
 const int EE_materialAddress            = 16;
 const int EE_temperatureAddress         = 18;
+const int EE_temperatureUnitsAddress    = 20;
 
 
 //const int numStates = 9;                 // not used
@@ -160,6 +162,7 @@ const float stepPowerWeight = (maxPower - minPower)/numPowerSteps;
 const float minTemperature = 0.0;
 const float maxTemperature = 500.0;
 const int   numTemperatureSteps = 70;
+const int   numTemperatureUnitsSteps = 2;
 const float stepTemperatureWeight = (maxTemperature - minTemperature)/numTemperatureSteps; 
 const float minVoltage = 1.0;
 const float maxVoltage = 4.2;
@@ -434,11 +437,36 @@ void stateMachine(){
         lcd.setCursor(0,0);
         lcd.print("Coil Temperature:");
         lcd.setCursor(0,1);
-        lcd.print(minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight);
-        lcd.print(" \337C"); // degree symbol (Omega) octal (244 in decimal)
+        if (EEPROM.read(EE_temperatureUnitsAddress)) {
+          lcd.print(minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight);
+          lcd.print(" \337C"); // degree symbol (Omega) octal (244 in decimal)
+        }
+        else {
+          lcd.print(((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)*1.8) + 32);
+          lcd.print(" F"); 
+        }
         button.check();
         if(button.wasClicked())
           EEPROM.write(EE_temperatureAddress, (EEPROM.read(EE_temperatureAddress)+1)%numTemperatureSteps);
+        if(button.wasHeld())
+//          state = 4;
+          state++;
+        break;
+      }
+
+      case(kSTATE_TEMPERATURE_UNITS):  // adjust temperature units
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Temperature in:");
+        lcd.setCursor(0,1);
+        if (EEPROM.read(EE_temperatureUnitsAddress))
+          lcd.print(" \337C"); // 1 = Centigrade
+        else
+          lcd.print(" F"); // 0 = Fahrenheit
+        button.check();
+        if(button.wasClicked())
+          EEPROM.write(EE_temperatureUnitsAddress, (EEPROM.read(EE_temperatureUnitsAddress)+1)%numTemperatureUnitsSteps);
         if(button.wasHeld())
 //          state = 4;
           state++;
