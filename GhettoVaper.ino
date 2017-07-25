@@ -100,8 +100,9 @@ const int kSTATE_TEMPERATURE_UNITS = 6;
 const int kSTATE_VOLTAGEDROP       = 7;
 const int kSTATE_READER            = 8;
 const int kSTATE_ADDRESS           = 9;
-const int kSTATE_DEFAULTS          = 10;
-const int kNumStates               = 11;              
+const int kSTATE_DEFAULTS          = 11;
+const int kSTATE_CONTROL_TYPE       = 10;
+const int kNumStates               = 12;              
 
 // Special states, that are not part of the round robbin states:
 const int kSTATE_SURE          = 101;
@@ -148,12 +149,17 @@ const float kTCRs[kNumMaterials] =
 };
 
 // Amplication of current measurment
-const float kAmplifier_Factor    = 1;  // For the instrumentation amplifier - to be set later
+const float kAmplifier_Factor      = 1;  // For the instrumentation amplifier - to be set later
 
 // Temperature Units
-const int kTemperatureUnits_F  = 0; 
-const int kTemperatureUnits_C  = 1; 
-const int kTemperatureUnits_K  = 2; 
+const int kTemperatureUnits_F      = 0; 
+const int kTemperatureUnits_C      = 1; 
+const int kTemperatureUnits_K      = 2; 
+
+// Control Tyoe
+const int kVoltageControl          = 0; 
+const int kPowerControl            = 1; 
+const int kTemperatureControl      = 2; 
 
 // initialize the library with the numbers of the interface pins
 #if defined (__Using_DFRobot_1602_LCD__)
@@ -182,6 +188,7 @@ const int EE_temperatureAddress         = 18;
 const int EE_temperatureUnitsAddress    = 20;
 const int EE_defaultsAddress            = 22;
 const int EE_defaultsSureAddress        = 24;
+const int EE_controlTypeAddress         = 25;
 
 
 const float minResistance = 0.0;
@@ -207,11 +214,12 @@ const int numVoltageDropProgs = 4;      // Used to cycle (wrap around) VoltageDr
 const int numMaterialProgs = kNumMaterials;      // Used to cycle (wrap around) MaterialProgs
 const int numDefaultsSteps = 2;
 const int numDefaultsSureSteps = 2;
+const int numControlTypeSteps = 3;
 
 const int interval = 100;
 
 int strPos = 0;
-int desiredVoltage;
+int desiredVoltage = 0; // For safety - We can assign a stored value, from EEPROM, later if we want
 int state = 0; 
 int wpm = 350;
 int readPeriod = 60000 / wpm; //period in ms
@@ -273,23 +281,80 @@ void loop() {
     stateMachine();
   }
   else {                             // if S2 does not meet the if
-    desiredVoltage = (minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight)*255/(analogRead(batteryPin)*5.25/1024);
-    if (minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight > analogRead(batteryPin)*5.25/1024)  // if there isn't sufficient battery life...
-      desiredVoltage = 255;                                                                                // then just supply the maximum
 
-    analogWrite(fetPin, desiredVoltage);                                                                   // Activate PWM to trigger NFET
 
     // Read the voltage across the coil
     EEPROM.write(EE_batteryVoltageDropAddress,analogRead(batteryPin));  // store the analogue read
     EEPROM.write(EE_coilVoltageDropAddress,analogRead(coilVoltageDropPin));  // store the analogue read
 
-    // For power control, and TCR
-    // For power
-    float currentInCoil = (analogRead(currentMeasurePin)*5.25)/(1024*kAmplifier_Factor*currentMeasureR);
-    //For temperature control, using TCR
-    float resistanceOfVapingCoil =  ((EEPROM.read(EE_batteryVoltageDropAddress) - EEPROM.read(EE_coilVoltageDropAddress))*5.25* currentInCoil)/1024;
-    float resistanceOfVapingCoilDelta = resistanceOfVapingCoil - (minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight);
-    float temperatureOfCoil = 23 + (resistanceOfVapingCoilDelta/kTCRs[EEPROM.read(EE_materialAddress)]);
+    switch (EEPROM.read(EE_controlTypeAddress))
+    {
+      case (kVoltageControl):
+      {
+        float EEVoltage = EEPROM.read(EE_voltageAddress)*stepVoltageWeight;
+        float batteryVoltage = analogRead(batteryPin)*5.25/1024;
+//      float coilVoltage = (minVoltage + EEVoltage);
+//      float voltageProportion = coilVoltage/batteryVoltage;
+//      desiredVoltage = VoltageProportion*255;
+        desiredVoltage = (minVoltage + (EEVoltage))*255/(batteryVoltage);
+        if (minVoltage + EEVoltage > batteryVoltage)  // if there isn't sufficient battery life...
+          desiredVoltage = 255;                                                                                // then just supply the maximum      
+        break;
+      }
+      case (kPowerControl):
+      {
+        // For power
+        float resistanceOfCoil = minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight;
+        float currentInCoil = (analogRead(currentMeasurePin)*5.25)/(1024*kAmplifier_Factor*currentMeasureR);
+        float powerInCoil = currentInCoil*currentInCoil*resistanceOfCoil;
+        float desiredPower = minPower + EEPROM.read(EE_powerAddress)*stepPowerWeight;
+        
+        // For power control - auto adjust
+        if (powerInCoil != desiredPower) {
+          float newPower = desiredPower-powerInCoil;
+          float voltageChange = sqrt(newPower*resistanceOfCoil);
+        }
+
+        float coilVoltage = sqrt(desiredPower*resistanceOfCoil);
+        float batteryVoltage = analogRead(batteryPin)*5.25/1024;
+//      float voltageProportion =  coilVoltage/batteryVoltage;
+//      desiredVoltage = VoltageProportion*255;
+        desiredVoltage = coilVoltage/batteryVoltage*255;  // This needs to be between 0-255 - does minVoltage play a part?
+        // Do we want to change the voltage in EE, to this new desired voltage?
+        // Probably not, as we can rely on the above calculations. And we don't want to mess the users settings.
+        // However, if we do set the EEVoltage then the code can then skip to the voltage control section, 
+        // but will make code slower, as it will then have to run through the voltage control code as well.
+        break;
+      }
+      case (kTemperatureControl): // this could be dangerous if no voltage sensing pin (i.e. the currentMeasurePin) is connected!!!
+      {
+        // For temperature control, using TCR
+        float resistanceOfCoil = minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight;
+        float currentInCoil = (analogRead(currentMeasurePin)*5.25)/(1024*kAmplifier_Factor*currentMeasureR);
+        float resistanceOfVapingCoil =  ((EEPROM.read(EE_batteryVoltageDropAddress) - EEPROM.read(EE_coilVoltageDropAddress))*5.25* currentInCoil)/1024;
+        float resistanceOfVapingCoilDelta = resistanceOfVapingCoil - resistanceOfCoil;
+        float temperatureOfCoil = 23 + (resistanceOfVapingCoilDelta/kTCRs[EEPROM.read(EE_materialAddress)]);
+        float desiredTemperature = minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight;
+        
+        if (temperatureOfCoil != desiredTemperature) {
+          float deltaTemperature = desiredTemperature - temperatureOfCoil;
+          if (deltaTemperature < 0)
+            desiredVoltage--;  // just decrease the DAC by one - doesn't really matter what the real voltage is
+          else if (deltaTemperature > 0)
+            desiredVoltage++;   // just increase the DAC by one - doesn't really matter what the real voltage is
+          // However, what value are we increasing desiredVoltage from exactly?
+          // Should it be made to start from:
+          //      the last used value, which was used when using voltage control?
+          //      a minimum point, say 1V?
+          // What value does desiredVoltage have when first switched on? If we assign zero in the declaration then fine
+          // Should we remember the last used voltage in EEPROM? 
+        }
+        break;
+      }
+
+      analogWrite(fetPin, desiredVoltage);                                                                   // Activate PWM to trigger NFET
+
+    }
     
     switch(EEPROM.read(EE_programAddress))
     {
@@ -664,6 +729,41 @@ void stateMachine(){
         }
         break;
       }
+
+      case(kSTATE_CONTROL_TYPE):  // adjust temperature units
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Control by:");
+        lcd.setCursor(0,1);
+        switch (EEPROM.read(EE_controlTypeAddress))
+        {
+          case(kVoltageControl):
+          {
+            lcd.print("Voltage"); 
+            break;
+          }
+          case(kPowerControl):
+          {
+            lcd.print("Power"); // 1 = Centigrade
+            break;
+          }
+          case(kTemperatureControl):
+          {
+            lcd.print("Temperature");     // 2 = Kelvin    
+            break;
+                          
+          }
+        }
+        button.check();
+        if(button.wasClicked())
+          EEPROM.write(EE_controlTypeAddress, (EEPROM.read(EE_controlTypeAddress)+1)%numControlTypeSteps);
+        if(button.wasHeld())
+//          state = 4;
+          state++;
+        break;
+      }
+
       
      case(kSTATE_SURE):
       {
@@ -735,5 +835,6 @@ void EE_Presets(){
   EEPROM.write(EE_temperatureUnitsAddress, kTemperatureUnits_C);  // default to °C
   EEPROM.write(EE_defaultsAddress, 0);  // default to "Do not reset"
   EEPROM.write(EE_defaultsSureAddress, 0);  // default to "No I am not sure"
+  EEPROM.write(EE_controlTypeAddress, 0);  // default to voltage control
 }
 
