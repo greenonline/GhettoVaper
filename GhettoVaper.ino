@@ -406,133 +406,8 @@ void loop() {
       analogWrite(fetPin, desiredVoltage);                                                                   // Activate PWM to trigger NFET
     }
     
-    switch(EEPROM.read(EE_programAddress))
-    {
-      case(kPM_Juice):
-      {
-        //JUICE
-        do 
-        {
-          customJ(0);    // displays custom 0 on the LCD
-          delay(interval);
-          customU(4);
-          delay(interval);
-          customI(7);
-          delay(interval);
-          customC(10);
-          delay(interval);
-          customE(14);
-          delay(interval);
-          lcd.clear();
-          delay(interval);
-        }
-        while(true);
-        break;
-      }
+    displayProgram();
 
-      case(kPM_Fresh):
-      {
-        do 
-        {
-          customF(0);    // displays custom 0 on the LCD
-          customR(3);
-          customE(7);
-          customS(10);
-          customH(13);
-          delay(interval);
-          lcd.clear(); 
-          delay(interval);
-        }
-        while(true);
-        break;
-      }
-
-      case(kPM_SpeedRead):
-      {
-        speedRead();
-        break;
-      }
-      
-      // Display the ADC and voltages of the battery and FET
-      case(kPM_Diag_VoltRead):
-      {
-        if (millis()-lastMillis>1000){
-          lastMillis=millis();
-          lcd.clear();
-          lcd.setCursor(0,0);
-          lcd.print("BAT ");
-          lcd.print(analogRead(batteryPin));
-          lcd.setCursor(8,0);
-          lcd.print(analogRead(batteryPin)*5.2/1024);
-          lcd.setCursor(0,1);
-          lcd.print("FET ");
-          lcd.print(analogRead(coilVoltageDropPin));
-          lcd.setCursor(8,1);
-          lcd.print(analogRead(coilVoltageDropPin)*5.2/1024);
-        }
-        break;
-      }
-
-      // Display the voltage and EE storage for battery
-      case(kPM_Diag_BatVoltRead_EE):
-      {
-        if (millis()-lastMillis>1000){
-          lastMillis=millis();
-          lcd.clear();
-          lcd.setCursor(0,0);
-          lcd.print("BAT ");
-          lcd.print(analogRead(batteryPin));
-          lcd.setCursor(8,0);
-          lcd.print(analogRead(batteryPin)*5.2/1024);
-          lcd.setCursor(0,1);
-          lcd.print("EEB ");
-          lcd.print(EEPROM.read(EE_batteryVoltageDropAddress));
-          lcd.setCursor(8,1);
-          lcd.print(EEPROM.read(EE_batteryVoltageDropAddress)*5.2/1024);
-        }
-        break;
-      }
-      
-      // Display the voltage and EE storage for the FET
-      case(kPM_Diag_FETVoltRead_EE):
-      {
-        if (millis()-lastMillis>1000){
-          lastMillis=millis();
-          lcd.clear();
-          lcd.setCursor(0,0);
-          lcd.print("FET ");
-          lcd.print(analogRead(coilVoltageDropPin));
-          lcd.setCursor(8,0);
-          lcd.print(analogRead(coilVoltageDropPin)*5.2/1024);
-          lcd.setCursor(0,1);
-          lcd.print("EEF ");
-          lcd.print(EEPROM.read(EE_coilVoltageDropAddress));
-          lcd.setCursor(8,1);
-          lcd.print(EEPROM.read(EE_coilVoltageDropAddress)*5.2/1024);
-        }
-        break;
-      }
-      
-      // Display the voltage and EE storage for the current measuring resistance
-      case(kPM_Diag_CurVoltRead_EE):   
-      {
-        if (millis()-lastMillis>1000){
-          lastMillis=millis();
-          lcd.clear();
-          lcd.setCursor(0,0);
-          lcd.print("CUR ");
-          lcd.print(analogRead(currentMeasurePin));
-          lcd.setCursor(8,0);
-          lcd.print(analogRead(currentMeasurePin)*5.2/1024);
-          lcd.setCursor(0,1);
-          lcd.print("EEC ");
-          lcd.print(EEPROM.read(EE_currentMeasureAddress));
-          lcd.setCursor(8,1);
-          lcd.print(EEPROM.read(EE_currentMeasureAddress)*5.2/1024);
-        }
-        break;
-      }
-    }
   }
 }
 
@@ -953,6 +828,136 @@ void stateMachine(){
     }
 
     delay(30); 
+  }
+}
+
+void displayProgram() {
+  switch(EEPROM.read(EE_programAddress))
+  {
+    case(kPM_Juice):
+    {
+      //JUICE
+      do 
+      {
+        customJ(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customU(4);
+        delay(interval);
+        customI(7);
+        delay(interval);
+        customC(10);
+        delay(interval);
+        customE(14);
+        delay(interval);
+        lcd.clear();
+        delay(interval);
+      }
+      while(true);
+      break;
+    }
+
+    case(kPM_Fresh):
+    {
+      do 
+      {
+        customF(0);    // displays custom 0 on the LCD
+        customR(3);
+        customE(7);
+        customS(10);
+        customH(13);
+        delay(interval);
+        lcd.clear(); 
+        delay(interval);
+      }
+      while(true);
+      break;
+    }
+
+    case(kPM_SpeedRead):
+    {
+      speedRead();
+      break;
+    }
+    
+    // Display the ADC and voltages of the battery and FET
+    case(kPM_Diag_VoltRead):
+    {
+      if (millis()-lastMillis>1000){
+        lastMillis=millis();
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("BAT ");
+        lcd.print(analogRead(batteryPin));
+        lcd.setCursor(8,0);
+        lcd.print(analogRead(batteryPin)*5.2/1024);
+        lcd.setCursor(0,1);
+        lcd.print("FET ");
+        lcd.print(analogRead(coilVoltageDropPin));
+        lcd.setCursor(8,1);
+        lcd.print(analogRead(coilVoltageDropPin)*5.2/1024);
+      }
+      break;
+    }
+
+    // Display the voltage and EE storage for battery
+    case(kPM_Diag_BatVoltRead_EE):
+    {
+      if (millis()-lastMillis>1000){
+        lastMillis=millis();
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("BAT ");
+        lcd.print(analogRead(batteryPin));
+        lcd.setCursor(8,0);
+        lcd.print(analogRead(batteryPin)*5.2/1024);
+        lcd.setCursor(0,1);
+        lcd.print("EEB ");
+        lcd.print(EEPROM.read(EE_batteryVoltageDropAddress));
+        lcd.setCursor(8,1);
+        lcd.print(EEPROM.read(EE_batteryVoltageDropAddress)*5.2/1024);
+      }
+      break;
+    }
+    
+    // Display the voltage and EE storage for the FET
+    case(kPM_Diag_FETVoltRead_EE):
+    {
+      if (millis()-lastMillis>1000){
+        lastMillis=millis();
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("FET ");
+        lcd.print(analogRead(coilVoltageDropPin));
+        lcd.setCursor(8,0);
+        lcd.print(analogRead(coilVoltageDropPin)*5.2/1024);
+        lcd.setCursor(0,1);
+        lcd.print("EEF ");
+        lcd.print(EEPROM.read(EE_coilVoltageDropAddress));
+        lcd.setCursor(8,1);
+        lcd.print(EEPROM.read(EE_coilVoltageDropAddress)*5.2/1024);
+      }
+      break;
+    }
+    
+    // Display the voltage and EE storage for the current measuring resistance
+    case(kPM_Diag_CurVoltRead_EE):   
+    {
+      if (millis()-lastMillis>1000){
+        lastMillis=millis();
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("CUR ");
+        lcd.print(analogRead(currentMeasurePin));
+        lcd.setCursor(8,0);
+        lcd.print(analogRead(currentMeasurePin)*5.2/1024);
+        lcd.setCursor(0,1);
+        lcd.print("EEC ");
+        lcd.print(EEPROM.read(EE_currentMeasureAddress));
+        lcd.setCursor(8,1);
+        lcd.print(EEPROM.read(EE_currentMeasureAddress)*5.2/1024);
+      }
+      break;
+    }
   }
 }
 
