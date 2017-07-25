@@ -3,6 +3,16 @@
 
 ///BIG CHARACTER SHIZ
 
+const int kLT = 0;
+const int kUB = 1;
+const int kRT = 2;
+const int kLL = 3;
+const int kLB = 4;
+const int kLR = 5;
+const int kMB = 6;
+const int kcross = 7;
+
+
 // the 8 arrays that form each segment of the custom numbers
 // Custome character "0"
 byte  LT[8] = 
@@ -176,7 +186,7 @@ void customC(int location)
   lcd.setCursor(location,0);
   lcd.write(0);  // was 7, should be 0 for the curved C top left
   lcd.write(1);  // should be 1
-  lcd.write(7);  // should be 9
+  lcd.write(7);  // was 1, should have been 9, now is 7
   lcd.setCursor(location, 1);
   lcd.write(3);
   lcd.write(4);
@@ -188,11 +198,11 @@ void customE(int location)
   lcd.setCursor(location,0);
   lcd.write(0);  // was 7, should be 0 for the curved E top left
   lcd.write(6);
-  //lcd.write(6);
+  lcd.write(" "); // was a 6
   lcd.setCursor(location, 1);
   lcd.write(3);  // was 7 - 3 gives a stylisd "E"
   lcd.write(4);
-  //lcd.write(4);
+  lcd.write(" "); // was a 4
 }
 
 void customF(int location)
@@ -203,8 +213,8 @@ void customF(int location)
   lcd.write(" ");
   lcd.setCursor(location, 1);
   lcd.write(5);
-  //lcd.write();
-  //lcd.write(4);
+  lcd.write(" ");
+  lcd.write(" ");
 }
 
 void customR(int location)
@@ -234,13 +244,13 @@ void customS(int location)
 void customH(int location)
 {
   lcd.setCursor(location,0);
-  lcd.write(2);
+  lcd.write(2);  // 0 or 2
   lcd.write(4);
-  lcd.write(2);
+  lcd.write(2);  // 0 or 2
   lcd.setCursor(location,1);
-  lcd.write(3);
+  lcd.write(3);  // 3 or 5
   lcd.write(" ");  
-  lcd.write(3);
+  lcd.write(3);  // 3 or 5
 }
 
 void customA(int location)
@@ -253,6 +263,90 @@ void customA(int location)
   lcd.write(3);
   lcd.write(" ");  
   lcd.write(3);
+}
+
+void customB(int location)
+{
+  lcd.setCursor(location,0);
+  lcd.write(255);
+  lcd.write(6);
+  lcd.write(2);
+  lcd.setCursor(location,1);
+  lcd.write(255);
+  lcd.write(4);  
+  lcd.write(5);
+}
+
+void customD(int location)
+{
+  lcd.setCursor(location,0);
+  lcd.write(255);
+  lcd.write(1);
+  lcd.write(2);
+  lcd.setCursor(location,1);
+  lcd.write(255);
+  lcd.write(4);  
+  lcd.write(5);
+}
+
+void customK(int location)
+{
+  lcd.setCursor(location,0);
+  lcd.write(2);
+  lcd.write(" ");
+  lcd.write(2);  // 2 or 5 ?
+  lcd.setCursor(location, 1);
+  lcd.write(5);
+  lcd.write(" ");
+  lcd.write(7);
+}
+
+void customL(int location)
+{
+  lcd.setCursor(location,0);
+  lcd.write(2);   
+  lcd.write(" ");   // was 7 - 2 gives a stylised "I"
+  lcd.write(" ");
+  lcd.setCursor(location, 1);
+  lcd.write(255);
+  lcd.write(4);  // was 7 - 3 gives a stylisd "I"
+  lcd.write(" ");
+}
+
+void customO(int location)
+{
+  lcd.setCursor(location,0);
+  lcd.write(0);
+  lcd.write(1);
+  lcd.write(2);
+  lcd.setCursor(location,1);
+  lcd.write(3);
+  lcd.write(4);  
+  lcd.write(5);
+}
+
+void customP(int location)
+{
+  lcd.setCursor(location,0);
+  lcd.write(0);
+  lcd.write(6);
+  lcd.write(2);  // 2 or 5 ?
+  lcd.setCursor(location, 1);
+  lcd.write(5);
+  lcd.write(" ");
+  lcd.write(" ");
+}
+
+void customT(int location)
+{
+  lcd.setCursor(location,0);
+  lcd.write(1);   
+  lcd.write(255); 
+  lcd.write(1);
+  lcd.setCursor(location, 1);
+  lcd.write(" ");
+  lcd.write(3);  // was 7 - 3 gives a stylisd "T"
+  lcd.write(" ");
 }
 
 //END BIG CHARACTER SHIZ
