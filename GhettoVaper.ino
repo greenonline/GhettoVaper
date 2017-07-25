@@ -100,6 +100,12 @@ const int kSTATE_TEMPERATURE_UNITS = 6;
 const int kSTATE_VOLTAGEDROP       = 7;
 const int kSTATE_READER            = 8;
 const int kSTATE_ADDRESS           = 9;
+const int kSTATE_DEFAULTS          = 10;
+const int kNumStates               = 11;              
+
+// Special states, that are not part of the round robbin states:
+const int kSTATE_SURE          = 101;
+
 
 // Coil Materials
 const int kMaterial_SS304          = 0;
@@ -126,6 +132,7 @@ const float kCoeff_Kanthal_A1      = 0.000002;  // A1/APM
 const float kCoeff_Kanthal_A       = 0.000053;  // A/AE/AF/D
 
 const int kNumMaterials            = 10;    
+
 const float kTCRs[kNumMaterials] = 
 {
   kCoeff_SS304, 
@@ -142,6 +149,11 @@ const float kTCRs[kNumMaterials] =
 
 // Amplication of current measurment
 const float kAmplifier_Factor    = 1;  // For the instrumentation amplifier - to be set later
+
+// Temperature Units
+const float kTemperatureUnits_F  = 0; 
+const float kTemperatureUnits_C  = 1; 
+const float kTemperatureUnits_K  = 2; 
 
 // initialize the library with the numbers of the interface pins
 #if defined (__Using_DFRobot_1602_LCD__)
@@ -164,13 +176,14 @@ const int EE_powerAddress               =  6;
 const int EE_coilVoltageDropAddress     =  8;
 const int EE_programVoltageDropAddress  = 10;
 const int EE_batteryVoltageDropAddress  = 12;
-const int EE_programMaterialAddress     = 14;
+//const int EE_programMaterialAddress     = 14;   // not needed as we have EE_material address
 const int EE_materialAddress            = 16;
 const int EE_temperatureAddress         = 18;
 const int EE_temperatureUnitsAddress    = 20;
+const int EE_defaultsAddress            = 22;
+const int EE_defaultsSureAddress            = 24;
 
 
-//const int numStates = 9;                 // not used
 const float minResistance = 0.0;
 const float maxResistance = 2.0;
 const int   numResistanceSteps = 20;
@@ -192,6 +205,9 @@ const float stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;
 const int numProgs = 3;      // Used to cycle (wrap around) Progs
 const int numVoltageDropProgs = 4;      // Used to cycle (wrap around) VoltageDropProgs
 const int numMaterialProgs = kNumMaterials;      // Used to cycle (wrap around) MaterialProgs
+const int numDefaultsSteps = 2;
+const int numDefaultsSureSteps = 2;
+
 const int interval = 100;
 
 int strPos = 0;
@@ -268,7 +284,9 @@ void loop() {
     EEPROM.write(EE_coilVoltageDropAddress,analogRead(coilVoltageDropPin));  // store the analogue read
 
     // For power control, and TCR
+    // For power
     float currentInCoil = (analogRead(currentMeasurePin)*5.25)/(1024*kAmplifier_Factor*currentMeasureR);
+    //For temperature control, using TCR
     float resistanceOfVapingCoil =  ((EEPROM.read(EE_batteryVoltageDropAddress) - EEPROM.read(EE_coilVoltageDropAddress))*5.25* currentInCoil)/1024;
     float resistanceOfVapingCoilDelta = resistanceOfVapingCoil - (minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight);
     float temperatureOfCoil = 23 + (resistanceOfVapingCoilDelta/kTCRs[EEPROM.read(EE_materialAddress)]);
@@ -592,9 +610,64 @@ void stateMachine(){
         lcd.print("lets roll");
         button.check();
         if(button.wasHeld())
-          state = 0;
+          state++;;
         break;
       }
+
+      case(kSTATE_DEFAULTS):
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Reset defaults?");
+        lcd.setCursor(0,1);
+        if (EEPROM.read(EE_defaultsAddress))
+          lcd.print("YES"); // 1 = YES
+        else
+          lcd.print("NO"); // 0 = NO
+        button.check();
+        if(button.wasClicked())
+          EEPROM.write(EE_defaultsAddress, (EEPROM.read(EE_defaultsAddress)+1)%numDefaultsSteps);
+        if(button.wasHeld()) {
+          if (EEPROM.read(EE_defaultsAddress)) {
+            state = kSTATE_SURE;
+          }
+          else
+            state++;
+        }
+        break;
+      }
+      
+     case(kSTATE_SURE):
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Are you sure?");
+        lcd.setCursor(0,1);
+        if (EEPROM.read(EE_defaultsSureAddress))
+          lcd.print("YES"); // 1 = YES
+        else
+          lcd.print("NO"); // 0 = NO
+        button.check();
+        if(button.wasClicked())
+          EEPROM.write(EE_defaultsSureAddress, (EEPROM.read(EE_defaultsSureAddress)+1)%numDefaultsSureSteps);
+        if(button.wasHeld()) {
+          if (EEPROM.read(EE_defaultsSureAddress)) {
+            lcd.clear();
+            lcd.setCursor(0,0);
+            lcd.print("Resetting...");
+            delay(300);
+            EE_Presets();
+          }
+          else
+            EEPROM.write(EE_defaultsSureAddress, 0); //Reset back to zero/NO - else you are presents with "Yes" at the next "Are you sure?"
+          state = 0;  // go back to state 0
+        }
+        break;
+      }
+    }
+
+    if (state >= kNumStates && state < 99) {
+      state= 0;
     }
 
     delay(30); 
@@ -618,5 +691,21 @@ void speedRead(){
     else
       delay(100);
   }
+}
+
+void EE_Presets(){
+  EEPROM.write(EE_programAddress, 0);  // Prints "JUICE" by default
+  EEPROM.write(EE_voltageAddress, 0);
+  EEPROM.write(EE_resistanceAddress, 0);  // should default to 1 Ohm or 0.5 Ohm, or what?
+  EEPROM.write(EE_powerAddress, 0);       // should default to 30 W, for safety?
+  EEPROM.write(EE_coilVoltageDropAddress, 0);
+  EEPROM.write(EE_programVoltageDropAddress, 0);
+  EEPROM.write(EE_batteryVoltageDropAddress, 0);
+//  EEPROM.write(EE_programMaterialAddress, kMaterial_SS316);  // not needed as we have EE_material address
+  EEPROM.write(EE_materialAddress, kMaterial_SS316);  // default SS 316
+  EEPROM.write(EE_temperatureAddress, 0);
+  EEPROM.write(EE_temperatureUnitsAddress, kTemperatureUnits_C);  // default to °C
+  EEPROM.write(EE_defaultsAddress, 0);  // default to "Do not reset"
+  EEPROM.write(EE_defaultsSureAddress, 0);  // default to "No I am not sure"
 }
 
