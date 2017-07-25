@@ -9,7 +9,7 @@ Modified by Julian Loiacono December '14
 #include "mButton.h"
 
 // Switch S2 behaviour
-#define __S2_To_HIGH__
+//#define __S2_To_HIGH__
 //#define __S2_To_LOW__  // default to this, as original
 //#define __MULTI_PUSH_S2__
 

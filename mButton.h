@@ -1,5 +1,10 @@
 #pragma once
 
+// Switch S2 behaviour
+#define __S2_To_HIGH__
+//#define __S2_To_LOW__  // default to this, as original
+//#define __MULTI_PUSH_S2__
+
 #if defined(ARDUINO) && ARDUINO >= 100
   #include "Arduino.h"
 #else

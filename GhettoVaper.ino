@@ -22,7 +22,6 @@
   *  Welcome mssage - not just a blkank scren
   *  adjust temp with tcrs
   *  set temp control on toggle
-  *  juice prints badly (double "C")
   */
  
 /*
@@ -48,7 +47,7 @@
  */
 
 // Switch S2 behaviour
-#define __S2_To_HIGH__
+//#define __S2_To_HIGH__
 //#define __S2_To_LOW__  // default to this, as original
 //#define __MULTI_PUSH_S2__
 
@@ -205,8 +204,8 @@ void setup() {
   // There was a problem drawing the "C" in "JUICE" with the original version
   // However, only eight custom characters can be assigned, therefore 0=8 and 1=9 - so there are two characters too many
   // As nothing uses character "0" (apart from "8" - the blank) - forget this
-  // A blank (8) is already defined by space
-  // the block can be replaced by other custom characters, to give stylised
+  // A blank (8) is already defined by space, or use character 254
+  // the block can be replaced by other custom characters, to give stylised, or use character 255
   lcd.createChar(0, LT);
   lcd.createChar(1, UB);
   lcd.createChar(2, RT);
