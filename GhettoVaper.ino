@@ -74,6 +74,7 @@
 // Testing with DFRobot 1602 display
 #define __Using_DFRobot_1602_LCD__
 
+// Constants
 
 // Pins
 const int fetPin                   = 11;
@@ -85,7 +86,7 @@ const int batteryPin               = A3;  // For DR Robot 16x02 display
 const int secondButton             = 10;  // Original
 const int batteryPin               = A0;  // Original
 #endif
-const int coilVoltageDropPin       = A1;
+const int coilVoltageDropPin       = A1;  // Voltage across FET, when FET goes directly to ground - otherwise it is the voltage across the FET and the measuring resistance
 const int currentMeasurePin        = A2;
 const float currentMeasureR        = 0.5;  //Ohms - Resistance of current measuring resistor
 
@@ -101,11 +102,11 @@ const int kSTATE_VOLTAGEDROP       = 7;
 const int kSTATE_READER            = 8;
 const int kSTATE_ADDRESS           = 9;
 const int kSTATE_DEFAULTS          = 11;
-const int kSTATE_CONTROL_TYPE       = 10;
+const int kSTATE_CONTROL_TYPE      = 10;
 const int kNumStates               = 12;              
 
 // Special states, that are not part of the round robbin states:
-const int kSTATE_SURE          = 101;
+const int kSTATE_SURE              = 101;
 
 
 // Coil Materials
@@ -161,16 +162,14 @@ const int kVoltageControl          = 0;
 const int kPowerControl            = 1; 
 const int kTemperatureControl      = 2; 
 
-// initialize the library with the numbers of the interface pins
-#if defined (__Using_DFRobot_1602_LCD__)
-LiquidCrystalFast lcd(8, 255,  9,  4,  5,  6, 7);   // For DFRobot 1602 shield
-#else
-LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);   // Original GhettoVape III wiring
-#endif
-// LCD pins:          RS  RW  EN  D4 D5  D6 D7
-
-// Create a button
-MomentaryButton button(secondButton);
+// Program Modes
+const int kPM_Juice                = 0;
+const int kPM_Fresh                = 1;
+const int kPM_SpeedRead            = 2;
+const int kPM_Diag_VoltRead        = 3;
+const int kPM_Diag_BatVoltRead_EE  = 4;
+const int kPM_Diag_FETVoltRead_EE  = 5;
+const int kPM_Diag_CurVoltRead_EE  = 6;
 
 const char speedMessage[] = {"Vape on it!!!"}; // use this form
 
@@ -188,7 +187,8 @@ const int EE_temperatureAddress         = 18;
 const int EE_temperatureUnitsAddress    = 20;
 const int EE_defaultsAddress            = 22;
 const int EE_defaultsSureAddress        = 24;
-const int EE_controlTypeAddress         = 25;
+const int EE_controlTypeAddress         = 26;
+const int EE_currentMeasureAddress      = 28;
 
 
 const float minResistance = 0.0;
@@ -209,14 +209,16 @@ const float maxVoltage = 4.2;
 const int   numVoltageSteps = 20;
 const float stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;
 // Progs are the number of sub settings for a particular function (or State)
-const int numProgs = 3;      // Used to cycle (wrap around) Progs
-const int numVoltageDropProgs = 4;      // Used to cycle (wrap around) VoltageDropProgs
-const int numMaterialProgs = kNumMaterials;      // Used to cycle (wrap around) MaterialProgs
-const int numDefaultsSteps = 2;
-const int numDefaultsSureSteps = 2;
-const int numControlTypeSteps = 3;
+const int   numProgs = 7;      // Used to cycle (wrap around) Progs
+const int   numVoltageDropProgs = 4;      // Used to cycle (wrap around) VoltageDropProgs
+const int   numMaterialProgs = kNumMaterials;      // Used to cycle (wrap around) MaterialProgs
+const int   numDefaultsSteps = 2;
+const int   numDefaultsSureSteps = 2;
+const int   numControlTypeSteps = 3;
 
 const int interval = 100;
+
+// Variables
 
 int strPos = 0;
 int desiredVoltage = 0; // For safety - We can assign a stored value, from EEPROM, later if we want
@@ -227,7 +229,19 @@ char thisWord[30];
 int wordLoc;
 long startTime = 0;
 
+// For timing
+unsigned long lastMillis = 0;
 
+// initialize the library with the numbers of the interface pins
+#if defined (__Using_DFRobot_1602_LCD__)
+LiquidCrystalFast lcd(8, 255,  9,  4,  5,  6, 7);   // For DFRobot 1602 shield
+#else
+LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);   // Original GhettoVape III wiring
+#endif
+// LCD pins:          RS  RW  EN  D4 D5  D6 D7
+
+// Create a button
+MomentaryButton button(secondButton);
 
 
 void setup() {
@@ -286,6 +300,7 @@ void loop() {
     // Read the voltage across the coil
     EEPROM.write(EE_batteryVoltageDropAddress,analogRead(batteryPin));  // store the analogue read
     EEPROM.write(EE_coilVoltageDropAddress,analogRead(coilVoltageDropPin));  // store the analogue read
+    EEPROM.write(EE_currentMeasureAddress,analogRead(currentMeasurePin));  // store the analogue read
 
     switch (EEPROM.read(EE_controlTypeAddress))
     {
@@ -293,6 +308,7 @@ void loop() {
       {
         float EEVoltage = EEPROM.read(EE_voltageAddress)*stepVoltageWeight;
         float batteryVoltage = analogRead(batteryPin)*5.25/1024;
+
 //      float coilVoltage = (minVoltage + EEVoltage);
 //      float voltageProportion = coilVoltage/batteryVoltage;
 //      desiredVoltage = VoltageProportion*255;
@@ -353,12 +369,11 @@ void loop() {
       }
 
       analogWrite(fetPin, desiredVoltage);                                                                   // Activate PWM to trigger NFET
-
     }
     
     switch(EEPROM.read(EE_programAddress))
     {
-      case(0):
+      case(kPM_Juice):
       {
         //JUICE
         do 
@@ -380,7 +395,7 @@ void loop() {
         break;
       }
 
-      case(1):
+      case(kPM_Fresh):
       {
         do 
         {
@@ -397,14 +412,95 @@ void loop() {
         break;
       }
 
-      case(2):
+      case(kPM_SpeedRead):
       {
         speedRead();
+        break;
+      }
+      
+      // Display the ADC and voltages of the battery and FET
+      case(kPM_Diag_VoltRead):
+      {
+        if (millis()-lastMillis>1000){
+          lastMillis=millis();
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("BAT ");
+          lcd.print(analogRead(batteryPin));
+          lcd.setCursor(8,0);
+          lcd.print(analogRead(batteryPin)*5.2/1024);
+          lcd.setCursor(0,1);
+          lcd.print("FET ");
+          lcd.print(analogRead(coilVoltageDropPin));
+          lcd.setCursor(8,1);
+          lcd.print(analogRead(coilVoltageDropPin)*5.2/1024);
+        }
+        break;
+      }
+
+      // Display the voltage and EE storage for battery
+      case(kPM_Diag_BatVoltRead_EE):
+      {
+        if (millis()-lastMillis>1000){
+          lastMillis=millis();
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("BAT ");
+          lcd.print(analogRead(batteryPin));
+          lcd.setCursor(8,0);
+          lcd.print(analogRead(batteryPin)*5.2/1024);
+          lcd.setCursor(0,1);
+          lcd.print("EEB ");
+          lcd.print(EEPROM.read(EE_batteryVoltageDropAddress));
+          lcd.setCursor(8,1);
+          lcd.print(EEPROM.read(EE_batteryVoltageDropAddress)*5.2/1024);
+        }
+        break;
+      }
+      
+      // Display the voltage and EE storage for the FET
+      case(kPM_Diag_FETVoltRead_EE):
+      {
+        if (millis()-lastMillis>1000){
+          lastMillis=millis();
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("FET ");
+          lcd.print(analogRead(coilVoltageDropPin));
+          lcd.setCursor(8,0);
+          lcd.print(analogRead(coilVoltageDropPin)*5.2/1024);
+          lcd.setCursor(0,1);
+          lcd.print("EEF ");
+          lcd.print(EEPROM.read(EE_coilVoltageDropAddress));
+          lcd.setCursor(8,1);
+          lcd.print(EEPROM.read(EE_coilVoltageDropAddress)*5.2/1024);
+        }
+        break;
+      }
+      
+      // Display the voltage and EE storage for the current measuring resistance
+      case(kPM_Diag_CurVoltRead_EE):   
+      {
+        if (millis()-lastMillis>1000){
+          lastMillis=millis();
+          lcd.clear();
+          lcd.setCursor(0,0);
+          lcd.print("CUR ");
+          lcd.print(analogRead(currentMeasurePin));
+          lcd.setCursor(8,0);
+          lcd.print(analogRead(currentMeasurePin)*5.2/1024);
+          lcd.setCursor(0,1);
+          lcd.print("EEC ");
+          lcd.print(EEPROM.read(EE_currentMeasureAddress));
+          lcd.setCursor(8,1);
+          lcd.print(EEPROM.read(EE_currentMeasureAddress)*5.2/1024);
+        }
         break;
       }
     }
   }
 }
+
 
 void stateMachine(){
   while(digitalRead(secondButton));
@@ -658,8 +754,19 @@ void stateMachine(){
             lcd.print(" W");
             break;
           }
+          
+          case(4):
+          {
+            //   Print voltage at current measuring resistance
+            lcd.clear();
+            lcd.setCursor(0,0);
+            lcd.print("Current Volt:");
+            lcd.setCursor(0,1);
+            lcd.print(EEPROM.read(EE_currentMeasureAddress)*5.2/1024);
+            lcd.print(" V");
+            break;
+          }
         }
-       
         button.check();
         if(button.wasClicked())
           EEPROM.write(EE_programVoltageDropAddress, (EEPROM.read(EE_programVoltageDropAddress)+1)%numVoltageDropProgs);
@@ -676,14 +783,26 @@ void stateMachine(){
         lcd.print("LCD Program:");
         lcd.setCursor(0,1);
         switch(EEPROM.read(EE_programAddress)){
-          case(0):
-            lcd.print("JUICE");
+          case(kPM_Juice):
+            lcd.print("JUICE");            // Display JUICE in custom characters
             break;
-          case(1):
-            lcd.print("FRESH");
+          case(kPM_Fresh):
+            lcd.print("FRESH");            // Display FRESH in custom characters
             break;
-          case(2):
+          case(kPM_SpeedRead):             // Display the message
             lcd.print("SpeedRead");
+            break;
+          case(kPM_Diag_VoltRead):         // Display the ADC and voltages of the battery and FET
+            lcd.print("Diag V");
+            break;
+          case(kPM_Diag_BatVoltRead_EE):   // Display the voltage and EE storage for battery
+            lcd.print("Diag V EE BAT");
+            break;
+          case(kPM_Diag_FETVoltRead_EE):   // Display the voltage and EE storage for the FET
+            lcd.print("Diag V EE FET");
+            break;
+          case(kPM_Diag_CurVoltRead_EE):   // Display the voltage and EE storage for the current measuring resistance
+            lcd.print("Diag V EE CUR");
             break;
         }
 
@@ -836,5 +955,6 @@ void EE_Presets(){
   EEPROM.write(EE_defaultsAddress, 0);  // default to "Do not reset"
   EEPROM.write(EE_defaultsSureAddress, 0);  // default to "No I am not sure"
   EEPROM.write(EE_controlTypeAddress, 0);  // default to voltage control
+  EEPROM.write(EE_currentMeasureAddress, 0);  // default to voltage control
 }
 
