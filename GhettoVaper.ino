@@ -88,7 +88,8 @@ const int batteryPin               = A0;  // Original
 #endif
 const int coilVoltageDropPin       = A1;  // Voltage across FET, when FET goes directly to ground - otherwise it is the voltage across the FET and the measuring resistance
 const int currentMeasurePin        = A2;
-const float currentMeasureR        = 0.5;  //Ohms - Resistance of current measuring resistor
+const float kCurrentMeasureR       = 0.5;  //Ohms - Resistance of current measuring resistor
+const float kRoomTemperature       = 23.0;
 
 // State Engine states
 const int kSTATE_BAT               = 0;
@@ -189,7 +190,8 @@ const int EE_defaultsAddress            = 22;
 const int EE_defaultsSureAddress        = 24;
 const int EE_controlTypeAddress         = 26;
 const int EE_currentMeasureAddress      = 28;
-
+//const int EE_voltage4PowerAddress       = 30;
+//const int EE_voltage4TemperatureAddress = 32;
 
 const float minResistance = 0.0;
 const float maxResistance = 2.0;
@@ -300,6 +302,7 @@ void loop() {
     // Read the voltage across the coil
     EEPROM.write(EE_batteryVoltageDropAddress,analogRead(batteryPin));  // store the analogue read
     EEPROM.write(EE_coilVoltageDropAddress,analogRead(coilVoltageDropPin));  // store the analogue read
+    // Read the voltage across the current measuring rsistance
     EEPROM.write(EE_currentMeasureAddress,analogRead(currentMeasurePin));  // store the analogue read
 
     switch (EEPROM.read(EE_controlTypeAddress))
@@ -312,25 +315,43 @@ void loop() {
 //      float coilVoltage = (minVoltage + EEVoltage);
 //      float voltageProportion = coilVoltage/batteryVoltage;
 //      desiredVoltage = VoltageProportion*255;
-        desiredVoltage = (minVoltage + (EEVoltage))*255/(batteryVoltage);
+        desiredVoltage = (minVoltage + (EEVoltage))*255/(batteryVoltage);                                     // desiredVoltage is not a voltage at all, it is a proportinal binary value mapped between 0 and 255
         if (minVoltage + EEVoltage > batteryVoltage)  // if there isn't sufficient battery life...
-          desiredVoltage = 255;                                                                                // then just supply the maximum      
+          desiredVoltage = 255;                                                                               // then just supply the maximum      
         break;
       }
       case (kPowerControl):
       {
+        // For the stored voltage calculated from the power
+//        float desiredVoltage = EEPROM.read(EE_voltage4PowerAddress);                                        // desiredVoltage is not a voltage at all, it is a proportinal binary value mapped between 0 and 255
+
         // For power
-        float resistanceOfCoil = minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight;
-        float currentInCoil = (analogRead(currentMeasurePin)*5.25)/(1024*kAmplifier_Factor*currentMeasureR);
-        float powerInCoil = currentInCoil*currentInCoil*resistanceOfCoil;
         float desiredPower = minPower + EEPROM.read(EE_powerAddress)*stepPowerWeight;
+        float resistanceOfCoil = minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight;
+
+        // For power control - auto adjust
+        float currentInCoil = (analogRead(currentMeasurePin)*5.25)/(1024*kAmplifier_Factor*kCurrentMeasureR);
+        float powerInCoil = currentInCoil*currentInCoil*resistanceOfCoil;
         
         // For power control - auto adjust
         if (powerInCoil != desiredPower) {
           float newPower = desiredPower-powerInCoil;
           float voltageChange = sqrt(newPower*resistanceOfCoil);
+          if (voltageChange < 0)
+            desiredVoltage--;  // just decrease the DAC by one - doesn't really matter what the real voltage is
+          else if (voltageChange > 0)
+            desiredVoltage++;   // just increase the DAC by one - doesn't really matter what the real voltage is
+          // Store the changes in EEPROM, EE_voltage4PowerAddress 
+//          EEPROM.write(EE_voltage4PowerAddress,desiredVoltage);  // store the analogue read
         }
 
+        // This code below could be set in the state machine/settings, when the power control is set AND when the power changed
+        // However, it would need to be saved in EEPROM, as powering off th device would mean that the power control settings are retained, but the desired voltage is lost.
+        // This voltage is already saved, in the EE_voltageAddress
+        // However, we do not want to mess with the user's settings for the voltage, as it will cause confusion
+        // So store as a separate EE_voltage4PowerAddress
+        // NOTE: the battery voltage will change (reduce) after the settings have been changed, and so there is an argument for keping these calculations here, and not one-time-only
+        // NOTE: there is a need to check for the min voltage - if the battery voltage is below that which is required, then just set to 255
         float coilVoltage = sqrt(desiredPower*resistanceOfCoil);
         float batteryVoltage = analogRead(batteryPin)*5.25/1024;
 //      float voltageProportion =  coilVoltage/batteryVoltage;
@@ -344,14 +365,21 @@ void loop() {
       }
       case (kTemperatureControl): // this could be dangerous if no voltage sensing pin (i.e. the currentMeasurePin) is connected!!!
       {
-        // For temperature control, using TCR
+        // For the stored voltage calculated from the temperature
+//        float desiredVoltage = EEPROM.read(EE_voltage4PowerAddress);                       // desiredVoltage is not a voltage at all, it is a proportinal binary value mapped between 0 and 255
+        // This voltage needs to be calculated before it can be stored, and retrieved
+        // NOTE: there is a need to check for the min voltage - if the battery voltage is below that which is required, then just set to 255
+
+         // For temperature control, using TCR
         float resistanceOfCoil = minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight;
-        float currentInCoil = (analogRead(currentMeasurePin)*5.25)/(1024*kAmplifier_Factor*currentMeasureR);
+        float roomTemperature = kRoomTemperature;
+        float currentInCoil = (analogRead(currentMeasurePin)*5.25)/(1024*kAmplifier_Factor*kCurrentMeasureR);
         float resistanceOfVapingCoil =  ((EEPROM.read(EE_batteryVoltageDropAddress) - EEPROM.read(EE_coilVoltageDropAddress))*5.25* currentInCoil)/1024;
         float resistanceOfVapingCoilDelta = resistanceOfVapingCoil - resistanceOfCoil;
-        float temperatureOfCoil = 23 + (resistanceOfVapingCoilDelta/kTCRs[EEPROM.read(EE_materialAddress)]);
+        float temperatureOfCoil = roomTemperature + (resistanceOfVapingCoilDelta/(kTCRs[EEPROM.read(EE_materialAddress)]*resistanceOfCoil));
         float desiredTemperature = minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight;
-        
+
+        //For temperature control - auto adjust
         if (temperatureOfCoil != desiredTemperature) {
           float deltaTemperature = desiredTemperature - temperatureOfCoil;
           if (deltaTemperature < 0)
@@ -359,11 +387,18 @@ void loop() {
           else if (deltaTemperature > 0)
             desiredVoltage++;   // just increase the DAC by one - doesn't really matter what the real voltage is
           // However, what value are we increasing desiredVoltage from exactly?
+          //      If we start at a voltage that is too high then the temperature will quickly overshoot, until the desiredVoltage is brought down
+          //      If we start at a voltage too low then the desiredTemperature may take a while to achieve
+          //      If we have to set a low initial desiredVoltage, where do we set it?
+          //            In the state machine/settings when selecting the temperature and when the temperature setting is adjusted?
           // Should it be made to start from:
           //      the last used value, which was used when using voltage control?
           //      a minimum point, say 1V?
           // What value does desiredVoltage have when first switched on? If we assign zero in the declaration then fine
           // Should we remember the last used voltage in EEPROM? 
+          //      Yes, as powering off the device, will retain the temperature controll settings, but lose the desiredVoltage
+          //      Use a separate EEPROM setting, such as EE_voltage4TemperatureAddress
+//          EEPROM.write(EE_voltage4TempAddress,desiredVoltage);  // store the analogue read
         }
         break;
       }
@@ -952,9 +987,11 @@ void EE_Presets(){
   EEPROM.write(EE_materialAddress, kMaterial_SS316);  // default SS 316
   EEPROM.write(EE_temperatureAddress, 0);
   EEPROM.write(EE_temperatureUnitsAddress, kTemperatureUnits_C);  // default to °C
-  EEPROM.write(EE_defaultsAddress, 0);  // default to "Do not reset"
-  EEPROM.write(EE_defaultsSureAddress, 0);  // default to "No I am not sure"
-  EEPROM.write(EE_controlTypeAddress, 0);  // default to voltage control
-  EEPROM.write(EE_currentMeasureAddress, 0);  // default to voltage control
+  EEPROM.write(EE_defaultsAddress, 0);             // default to "Do not reset"
+  EEPROM.write(EE_defaultsSureAddress, 0);         // default to "No I am not sure"
+  EEPROM.write(EE_controlTypeAddress, 0);          // default to voltage control
+  EEPROM.write(EE_currentMeasureAddress, 0);       // default to 0 - no current flow
+//  EEPROM.write(EE_voltage4PowerAddress, 0);        // default to 0 for safety - this is set when the power control option is selected, or power is adjusted
+//  EEPROM.write(EE_voltage4TemperatureAddress, 0);  // default to 0 for safety - this is set when the temperature control option is selected, or temperature is adjusted
 }
 
