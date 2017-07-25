@@ -210,7 +210,7 @@ const int   numVoltageSteps = 20;
 const float stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;
 // Progs are the number of sub settings for a particular function (or State)
 const int   numProgs = 7;      // Used to cycle (wrap around) Progs
-const int   numVoltageDropProgs = 4;      // Used to cycle (wrap around) VoltageDropProgs
+const int   numVoltageDropProgs = 5;      // Used to cycle (wrap around) VoltageDropProgs
 const int   numMaterialProgs = kNumMaterials;      // Used to cycle (wrap around) MaterialProgs
 const int   numDefaultsSteps = 2;
 const int   numDefaultsSureSteps = 2;
@@ -943,7 +943,7 @@ void speedRead(){
 void EE_Presets(){
   EEPROM.write(EE_programAddress, 0);  // Prints "JUICE" by default
   EEPROM.write(EE_voltageAddress, 0);
-  EEPROM.write(EE_resistanceAddress, 0);  // should default to 1 Ohm or 0.5 Ohm, or what?
+  EEPROM.write(EE_resistanceAddress, 1);  // should default to 1 Ohm or 0.5 Ohm, or what? Can not be zero as it gives an infinite power result
   EEPROM.write(EE_powerAddress, 0);       // should default to 30 W, for safety?
   EEPROM.write(EE_coilVoltageDropAddress, 0);
   EEPROM.write(EE_programVoltageDropAddress, 0);
