@@ -4,25 +4,45 @@
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
 
-/* Problems:
+/*  
+ *  Filename: GhettoVaper.ino 
  * 
- * 1. You have to wait for the Arduino to boot, before each vape
- * 2. Need to be able to select coil resistance, R_coil
- * 3. You can't measure the power yet - need to read voltage below coil, on A1 and then P=(A0-A1)*(A0-A1)/R_Coil
+ *  Modified from the GhettoVape III code:https://github.com/jcloiacon/ghettovape-III by Julian Loiacono (see also https://www.youtube.com/watch?v=wXBiAZ-3UqU)
+ *  
+ *  Fixes:
+ *  
+ *    Custom Characters
+ *    
+ *    Replaced #define with const
+ *    
+ *   
+ *  Adds:
+ *  
+ *    Temperature control (°C/°F)
+ *    Power control
+ *    Coil resistance
+ *    Coil Materials and TCRs
+ *    Inverts button S2
+ *    Custom CHaracters
+ *    
+ *    Compiler defines:
+ *      - Switch inversion
+ *      - Testing with DFRobot LCD shield
+ *      
+ *  Problems:
  * 
- * 
- * Can modify switch S1 to be a toggle switch, so Arduino is always on and then S2 still controls the vape, with a hold, but multiple switches select the "mode select" mode
- */
-
- /* Changes:
-  *  S2 push to high
-  *  Added defines
-  *  
-  *  To do: share compiler defs across files
-  *  Welcome mssage - not just a blkank scren
-  *  adjust temp with tcrs
-  *  set temp control on toggle
-  */
+ *    1. You have to wait for the Arduino to boot, before each vape
+ *    2. Can modify switch S1 to be a toggle switch, so Arduino is always on and then S2 still controls the vape, with a hold, but multiple switches select the "mode select" mode
+ *  
+ *  To do: 
+ *  
+ *    Share compiler defs across files
+ *    Welcome message - not just a bkank scren
+ *    Adjust temp with tcrs
+ *    Set temp control on toggle
+ *    Predefine EE settings, for a new install
+ *    Reset EE setings
+*/
  
 /*
  
@@ -46,7 +66,7 @@
  
  */
 
-// Switch S2 behaviour
+// Switch S2 behaviour - do not change here - see mButton.h
 //#define __S2_To_HIGH__
 //#define __S2_To_LOW__  // default to this, as original
 //#define __MULTI_PUSH_S2__
@@ -443,7 +463,7 @@ void stateMachine(){
         }
         else {
           lcd.print(((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)*1.8) + 32);
-          lcd.print(" F"); 
+          lcd.print(" \337F"); 
         }
         button.check();
         if(button.wasClicked())
@@ -463,7 +483,7 @@ void stateMachine(){
         if (EEPROM.read(EE_temperatureUnitsAddress))
           lcd.print(" \337C"); // 1 = Centigrade
         else
-          lcd.print(" F"); // 0 = Fahrenheit
+          lcd.print(" \337F"); // 0 = Fahrenheit
         button.check();
         if(button.wasClicked())
           EEPROM.write(EE_temperatureUnitsAddress, (EEPROM.read(EE_temperatureUnitsAddress)+1)%numTemperatureUnitsSteps);
