@@ -54,11 +54,11 @@
 const int fetPin                 = 11;
 const int lcd_backlight          = 2;
 #if defined (__Using_DFRobot_1602_LCD__)
-const int secondButton           = 10;  // Original
-const int batteryPin             = A0;  // Original
-#else
 const int secondButton           = 12;  // For DR Robot 16x02 display
 const int batteryPin             = A3;  // For DR Robot 16x02 display
+#else
+const int secondButton           = 10;  // Original
+const int batteryPin             = A0;  // Original
 #endif
 const int coilVoltageDropPin     = A1;
 const int currentMeasurePin      = A2;
