@@ -239,7 +239,7 @@ const int kPM_Diag_BatVoltRead_EE  = 4;
 const int kPM_Diag_FETVoltRead_EE  = 5;
 const int kPM_Diag_CurVoltRead_EE  = 6;
 
-const char speedMessage[] = {"Vape on it!!!"}; // use this form
+const char speedMessage[] = {"Vape on it!!!\0"}; // use this form
 
 // EEPROM addresses
 const int EE_programAddress             =  0;
@@ -358,8 +358,8 @@ void setup() {
 #endif
   lcd.clear();
 
-  if (checkOutOfRange)
-    EE_Presets();
+//  if (checkOutOfRange)
+//    EE_Presets();
 }
 
 void loop() {
@@ -1036,7 +1036,7 @@ void displayProgram() {
 
     case(kPM_SpeedRead):
     {
-      speedRead();
+      speedRead2();
       break;
     }
     
@@ -1123,32 +1123,98 @@ void displayProgram() {
 }
 
 void speedRead(){
+  const int kLCDWidth = 16;
   int i;
   strPos = 0;
   boolean firstScreen=true;
   while(speedMessage[strPos] != '\0'){
+    lcd.clear();
     for (int y=0; y<2; y++) {
       for(i = 0; speedMessage[strPos] != ' ' && speedMessage[strPos] != '\0'; i++){
         thisWord[i] = speedMessage[strPos++];
       }
-      strPos++;
+      if (speedMessage[strPos] != '\0')
+        strPos++;
       thisWord[i] = '\0';
-      lcd.clear();
-      lcd.setCursor(4-i/5,y);
-      if (y==0 && !firstScreen){
-        lcd.print(lastWord);
-      } else {
-        lcd.print(thisWord);
+//      lcd.setCursor(4-i/5,y);
+      if (!firstScreen){
+          lcd.setCursor(0,0);
+          for (int blank = 0; blank<kLCDWidth;blank++)lcd.print(" ");
+          lcd.setCursor(8-strlen(lastWord)/2,0);
+          lcd.print(lastWord);
+          lcd.setCursor(0,1);
+          for (int blank = 0; blank<kLCDWidth;blank++)lcd.print(" ");
+          lcd.setCursor(8-strlen(thisWord)/2,1);
+          lcd.print(thisWord);
+      } else {  //first screen, i.e. start of message starts by scrolling down. Thereafter is scrolls up - This is a bit odd looking
+          lcd.setCursor(8-strlen(thisWord)/2,y);
+          lcd.print(thisWord);
       }
       if (thisWord[i-1] == '.'  || thisWord[i-1] == ',')
-        delay(250);
+        delay(2500);
       else
-        delay(100);
+        delay(1000);
       strcpy(lastWord, thisWord);
     }
     firstScreen=false;
   }
 }
+
+void speedRead2(){
+  const int kLCDWidth = 16;
+  const int kLCDHeight = 2;
+  int i;
+  strPos = 0;
+  boolean firstScreen=true;
+  boolean lastScreen=false;
+  boolean endIt=false;
+  while((speedMessage[strPos] != '\0' || lastScreen) && !endIt){
+    if (lastScreen) {
+      lastScreen=false;
+      endIt=true;
+    }
+    lcd.clear();
+    for (int y=0; y<kLCDHeight; y++) {
+      for(i = 0; speedMessage[strPos] != ' ' && speedMessage[strPos] != '\0'; i++){
+        thisWord[i] = speedMessage[strPos++];
+      }
+      if (speedMessage[strPos] != '\0') 
+        strPos++;
+      else
+        lastScreen=true;      
+      thisWord[i] = '\0';
+      if (!firstScreen){
+          lcd.setCursor(0,0);
+          for (int blank = 0; blank<kLCDWidth;blank++)lcd.print(" ");
+          lcd.setCursor(8-strlen(lastWord)/2,0);
+          lcd.print(lastWord);
+          lcd.setCursor(0,1);
+          for (int blank = 0; blank<kLCDWidth;blank++)lcd.print(" ");
+          lcd.setCursor(8-strlen(thisWord)/2,1);
+          lcd.print(thisWord);
+      } else {  //first screen, i.e. start of message starts by scrolling up.  - This is better looking
+          lcd.setCursor(8-strlen(thisWord)/2,1);
+          lcd.print(thisWord);
+      }
+      if (thisWord[i-1] == '.'  || thisWord[i-1] == ',')
+        delay(2500);
+      else
+        delay(1000);
+      strcpy(lastWord, thisWord);
+      firstScreen=false;
+    }
+  }
+}
+
+
+//        if (y==0 && !firstScreen){
+//          lcd.setCursor(8-strlen(lastWord)/2,y);
+//          lcd.print(lastWord);
+//        } else {
+//          lcd.setCursor(8-strlen(thisWord)/2,y);
+//          lcd.print(thisWord);
+//        }
+
 
 boolean checkOutOfRange(){ 
   boolean resetNeeded = false;
