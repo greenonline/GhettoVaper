@@ -4,8 +4,8 @@
 
 //Select which LCD you are using - 1602 is the default
 // Testing with DFRobot 1602 display (default standard 1602 shield)
-//#define __Use_DFRobot_1602_LCD__
-#define __Use_TFT_ILI9163C_Extended_Char_LCD__
+#define __Use_DFRobot_1602_LCD__
+//#define __Use_TFT_ILI9163C_Extended_Char_LCD__
 //#define __Use_1602_LCD__
 
 // Switch S2 behaviour - do not change here - see mButton.h
@@ -133,9 +133,11 @@ const int kTestSize = 1;
 
 // Pins
 const int fetPin                   = 11;
+
 #if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
 const int lcd_backlight            = 2;
 #endif
+/*
 #if defined (__Using_DFRobot_1602_LCD__)
 const int secondButton             = 12;  // For DR Robot 16x02 display
 const int batteryPin               = A3;  // For DR Robot 16x02 display
@@ -149,10 +151,14 @@ const int batteryPin               = A0;  // Original
 const int secondButton             = 10;  // Original
 const int batteryPin               = A0;  // Original
 #endif
+*/
 const int coilVoltageDropPin       = A1;  // Voltage across FET, when FET goes directly to ground - otherwise it is the voltage across the FET and the measuring resistance
 const int currentMeasurePin        = A2;
 const float kCurrentMeasureR       = 0.5;  //Ohms - Resistance of current measuring resistor
 const float kRoomTemperature       = 23.0;
+
+const int secondButton             = 12;  // For DR Robot 16x02 display
+const int batteryPin               = A3;  // For DR Robot 16x02 display
 
 // State Engine states
 const int kSTATE_BAT               = 0;
@@ -479,7 +485,6 @@ void loop() {
 
       analogWrite(fetPin, desiredVoltage);                                                                   // Activate PWM to trigger NFET
     }
-    
     displayProgram();
 
   }
@@ -906,6 +911,8 @@ void stateMachine(){
 }
 
 void displayProgram() {
+  if (EEPROM.read(EE_programAddress)>=numProgs)  // if numProgs is out of range, on a freshly installed machine (bug fix)
+    EEPROM.write(EE_programAddress,0); // set it to zero
   switch(EEPROM.read(EE_programAddress))
   {
     case(kPM_Juice):
@@ -927,6 +934,10 @@ void displayProgram() {
         lcd.clear();
         delay(interval);
 #else
+        lcd.clear(); 
+        lcd.setCursor(0,0);
+        lcd.print("JUICE");
+        delay(interval);
 #endif
       }
       while(true);
@@ -947,6 +958,10 @@ void displayProgram() {
         lcd.clear(); 
         delay(interval);
 #else
+        lcd.clear(); 
+        lcd.setCursor(0,0);
+        lcd.print("FRESH");
+        delay(interval);
 #endif
       }
       while(true);
