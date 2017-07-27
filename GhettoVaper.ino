@@ -295,6 +295,7 @@ int state = 0;
 int wpm = 350;
 int readPeriod = 60000 / wpm; //period in ms
 char thisWord[30];
+char lastWord[30];
 int wordLoc;
 long startTime = 0;
 
@@ -985,8 +986,8 @@ void displayProgram() {
     case(kPM_Juice):
     {
       //JUICE
-      do 
-      {
+//      do 
+//      {
 #if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
         customJ(0);    // displays custom 0 on the LCD
         delay(interval);
@@ -1005,15 +1006,15 @@ void displayProgram() {
 #endif
         lcd.clear();
         delay(interval);
-      }
-      while(true);
+//      }
+//      while(true);
       break;
     }
 
     case(kPM_Fresh):
     {
-      do 
-      {
+//      do 
+//      {
 #if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
         customF(0);    // displays custom 0 on the LCD
         customR(3);
@@ -1028,8 +1029,8 @@ void displayProgram() {
 #endif
         lcd.clear(); 
         delay(interval);
-      }
-      while(true);
+//      }
+//      while(true);
       break;
     }
 
@@ -1124,19 +1125,28 @@ void displayProgram() {
 void speedRead(){
   int i;
   strPos = 0;
+  boolean firstScreen=true;
   while(speedMessage[strPos] != '\0'){
-    for(i = 0; speedMessage[strPos] != ' ' && speedMessage[strPos] != '\0'; i++){
-      thisWord[i] = speedMessage[strPos++];
+    for (int y=0; y<2; y++) {
+      for(i = 0; speedMessage[strPos] != ' ' && speedMessage[strPos] != '\0'; i++){
+        thisWord[i] = speedMessage[strPos++];
+      }
+      strPos++;
+      thisWord[i] = '\0';
+      lcd.clear();
+      lcd.setCursor(4-i/5,y);
+      if (y==0 && !firstScreen){
+        lcd.print(lastWord);
+      } else {
+        lcd.print(thisWord);
+      }
+      if (thisWord[i-1] == '.'  || thisWord[i-1] == ',')
+        delay(250);
+      else
+        delay(100);
+      strcpy(lastWord, thisWord);
     }
-    strPos++;
-    thisWord[i] = '\0';
-    lcd.clear();
-    lcd.setCursor(4-i/5,0);
-    lcd.print(thisWord);
-    if (thisWord[i-1] == '.'  || thisWord[i-1] == ',')
-      delay(250);
-    else
-      delay(100);
+    firstScreen=false;
   }
 }
 
