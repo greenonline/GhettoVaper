@@ -356,6 +356,9 @@ void setup() {
   lcd.createChar(7, cross);
 #endif
   lcd.clear();
+
+  if (checkOutOfRange)
+    EE_Presets();
 }
 
 void loop() {
@@ -1135,6 +1138,21 @@ void speedRead(){
     else
       delay(100);
   }
+}
+
+boolean checkOutOfRange(){ 
+  boolean resetNeeded = false;
+  
+  if (EEPROM.read(EE_defaultsAddress) >= numDefaultsSteps ||
+     EEPROM.read(EE_defaultsSureAddress) >= numDefaultsSureSteps ||
+     EEPROM.read(EE_programAddress) >= numProgs ||
+     EEPROM.read(EE_controlTypeAddress) >= numControlTypeSteps ||
+     EEPROM.read(EE_programVoltageDropAddress) >= numVoltageDropProgs ||
+     EEPROM.read(EE_temperatureUnitsAddress) >= numTemperatureUnitsSteps ||
+     EEPROM.read(EE_materialAddress) >= numMaterialProgs)
+    resetNeeded = true;
+    
+  return (resetNeeded);  
 }
 
 void EE_Presets(){
