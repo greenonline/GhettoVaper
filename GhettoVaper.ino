@@ -239,7 +239,7 @@ const int kPM_Diag_BatVoltRead_EE  = 4;
 const int kPM_Diag_FETVoltRead_EE  = 5;
 const int kPM_Diag_CurVoltRead_EE  = 6;
 
-const char speedMessage[] = {"Vape on it!!!\0"}; // use this form
+const char speedMessage[] = {"Vape on it!!! yeah\0"}; // use this form
 
 // EEPROM addresses
 const int EE_programAddress             =  0;
@@ -294,8 +294,11 @@ int desiredVoltage = 0; // For safety - We can assign a stored value, from EEPRO
 int state = 0; 
 int wpm = 350;
 int readPeriod = 60000 / wpm; //period in ms
+  const int kLCDWidth = 16;
+  const int kLCDHeight = 2;
 char thisWord[30];
 char lastWord[30];
+char allWords[kLCDHeight][kLCDWidth];
 int wordLoc;
 long startTime = 0;
 
@@ -1036,7 +1039,7 @@ void displayProgram() {
 
     case(kPM_SpeedRead):
     {
-      speedRead2();
+      speedRead3();
       break;
     }
     
@@ -1201,6 +1204,50 @@ void speedRead2(){
       else
         delay(1000);
       strcpy(lastWord, thisWord);
+      firstScreen=false;
+    }
+  }
+}
+
+void speedRead3(){
+  int i;
+  strPos = 0;
+  boolean firstScreen=true;
+  boolean lastScreen=false;
+  boolean endIt=false;
+  while((speedMessage[strPos] != '\0' || lastScreen) && !endIt){
+    if (lastScreen) {
+      lastScreen=false;
+      endIt=true;
+    }
+    lcd.clear();
+    for (int y=0; y<kLCDHeight; y++) {
+      for(i = 0; speedMessage[strPos] != ' ' && speedMessage[strPos] != '\0'; i++){
+        allWords[kLCDHeight-1][i] = speedMessage[strPos++];
+      }
+      if (speedMessage[strPos] != '\0') 
+        strPos++;
+      else
+        lastScreen=true;      
+      allWords[kLCDHeight-1][i] = '\0';
+      if (!firstScreen){
+        for (int height=0; height<kLCDHeight;height++) {
+      
+          lcd.setCursor(0,height);
+          for (int blank = 0; blank<kLCDWidth;blank++)lcd.print(" ");
+          lcd.setCursor(8-strlen(allWords[height])/2,height);
+          lcd.print(allWords[height]);
+        }
+     } else {  //first screen, i.e. start of message starts by scrolling up.  - This is better looking
+          lcd.setCursor(8-strlen(allWords[kLCDHeight-1])/2,kLCDHeight-1);
+          lcd.print(allWords[kLCDHeight-1]);
+      }
+      if (allWords[kLCDHeight-1][i-1] == '.'  || allWords[kLCDHeight-1][i-1] == ',')
+        delay(2500);
+      else
+        delay(1000);
+      for (int n=1; n<kLCDHeight;n++) 
+        strcpy(allWords[n-1], allWords[n]);
       firstScreen=false;
     }
   }
