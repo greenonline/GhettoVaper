@@ -1,36 +1,3 @@
-#include "mButton.h"
-#include <EEPROM.h>
-#include <avr/pgmspace.h>
-
-//Select which LCD you are using - 1602 is the default
-// Testing with DFRobot 1602 display (default standard 1602 shield)
-#define __Use_DFRobot_1602_LCD__
-//#define __Use_TFT_ILI9163C_Extended_Char_LCD__
-//#define __Use_1602_LCD__
-
-// Switch S2 behaviour - do not change here - see mButton.h
-//#define __S2_To_HIGH__
-//#define __S2_To_LOW__  // default to this, as original
-//#define __MULTI_PUSH_S2__
-
-
-
-
-#if defined (__Use_DFRobot_1602_LCD__)
-#include <LiquidCrystalFast.h>
-#include "BigCharacters.h"
-#elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
-#include <SPI.h>
-#include <Adafruit_GFX.h>
-#include <TFT_ILI9163C_Extended_Char.h>
-#elif defined (__Use_1602_LCD__)
-#include "LiquidCrystalFast.h"
-#include "BigCharacters.h"
-#else
-#include "LiquidCrystalFast.h"
-#include "BigCharacters.h"
-#endif
-
 /*  
  *  Filename: GhettoVaper.ino 
  * 
@@ -105,6 +72,40 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
  GND to GND
  VCC to 3.3V 
  */
+
+#include "mButton.h"
+#include <EEPROM.h>
+#include <avr/pgmspace.h>
+
+//Select which LCD you are using - 1602 is the default
+// Testing with DFRobot 1602 display (default standard 1602 shield)
+#define __Use_DFRobot_1602_LCD__
+//#define __Use_TFT_ILI9163C_Extended_Char_LCD__
+//#define __Use_1602_LCD__
+
+// Switch S2 behaviour - !!!!DO NOT change here!!!! - see mButton.h
+//#define __S2_To_HIGH__
+//#define __S2_To_LOW__  // default to this, as original
+//#define __MULTI_PUSH_S2__
+
+
+
+
+#if defined (__Use_DFRobot_1602_LCD__)
+#include <LiquidCrystalFast.h>
+#include "BigCharacters.h"
+#elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <TFT_ILI9163C_Extended_Char.h>
+#elif defined (__Use_1602_LCD__)
+#include "LiquidCrystalFast.h"
+#include "BigCharacters.h"
+#else
+#include "LiquidCrystalFast.h"
+#include "BigCharacters.h"
+#endif
+
  
 // All wiring required, for TFT_ILI9163C, only 3 defines for hardware SPI on 328P
 #define __DC 9
@@ -137,12 +138,12 @@ const int fetPin                   = 11;
 #if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
 const int lcd_backlight            = 2;
 #endif
-/*
-#if defined (__Using_DFRobot_1602_LCD__)
+
+#if defined (__Use_DFRobot_1602_LCD__)
 const int secondButton             = 12;  // For DR Robot 16x02 display
 const int batteryPin               = A3;  // For DR Robot 16x02 display
 #elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
-const int secondButton             = 6;  // Original
+const int secondButton             = 6;   // For TFT_ILI9163C
 const int batteryPin               = A0;  // Original
 #elif defined (__Use_1602_LCD__)
 const int secondButton             = 10;  // Original
@@ -151,14 +152,11 @@ const int batteryPin               = A0;  // Original
 const int secondButton             = 10;  // Original
 const int batteryPin               = A0;  // Original
 #endif
-*/
+
 const int coilVoltageDropPin       = A1;  // Voltage across FET, when FET goes directly to ground - otherwise it is the voltage across the FET and the measuring resistance
 const int currentMeasurePin        = A2;
 const float kCurrentMeasureR       = 0.5;  //Ohms - Resistance of current measuring resistor
 const float kRoomTemperature       = 23.0;
-
-const int secondButton             = 12;  // For DR Robot 16x02 display
-const int batteryPin               = A3;  // For DR Robot 16x02 display
 
 // State Engine states
 const int kSTATE_BAT               = 0;
@@ -997,14 +995,13 @@ void displayProgram() {
         delay(interval);
         customE(14);
         delay(interval);
-        lcd.clear();
-        delay(interval);
 #else
-        lcd.clear(); 
         lcd.setCursor(0,0);
         lcd.print("JUICE");
         delay(interval);
 #endif
+        lcd.clear();
+        delay(interval);
       }
       while(true);
       break;
@@ -1021,14 +1018,13 @@ void displayProgram() {
         customS(10);
         customH(13);
         delay(interval);
-        lcd.clear(); 
-        delay(interval);
 #else
-        lcd.clear(); 
         lcd.setCursor(0,0);
         lcd.print("FRESH");
         delay(interval);
 #endif
+        lcd.clear(); 
+        delay(interval);
       }
       while(true);
       break;
