@@ -500,7 +500,6 @@ void stateMachine(){
     {
       case(kSTATE_BAT):  // show battery voltage
       {
-        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Battery Voltage:");
         lcd.setCursor(0,1);
@@ -508,14 +507,16 @@ void stateMachine(){
         lcd.print(" V");
         button.check();
         if(button.wasHeld())
+        {
+          buttonWasHeld();
 //          state = 1;
           state++;
+        }
         break;
       }
 
       case(kSTATE_COIL):  // adjust coil voltage
       {
-        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Coil Voltage:");
         lcd.setCursor(0,1);
@@ -523,16 +524,21 @@ void stateMachine(){
         lcd.print(" V");
         button.check();
         if(button.wasClicked())
+        {
+          buttonWasClicked();
           EEPROM.write(EE_voltageAddress, (EEPROM.read(EE_voltageAddress)+1)%numVoltageSteps);
+        }
         if(button.wasHeld())
+        {
+          buttonWasHeld();
 //          state = 2;
           state++;
+        }
         break;
       }
 
       case(kSTATE_POWER):  // adjust power
       {
-        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Power:");
         lcd.setCursor(0,1);
@@ -541,20 +547,23 @@ void stateMachine(){
         button.check();
         if(button.wasClicked())
         {
+          buttonWasClicked();
           EEPROM.write(EE_powerAddress, (EEPROM.read(EE_powerAddress)+1)%numPowerSteps);
           // Calculate the voltage required
           float voltsForPower = sqrt((minPower + EEPROM.read(EE_powerAddress)*stepPowerWeight)*(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight));
           EEPROM.write(EE_voltageAddress, (voltsForPower-minVoltage)/stepVoltageWeight);
         }
         if(button.wasHeld())
+        {
+          buttonWasHeld();
 //          state = 3;
           state++;
+        }
         break;
       }
 
       case(kSTATE_RESISTANCE):  // adjust coil resistance
       {
-        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Coil Resistance:");
         lcd.setCursor(0,1);
@@ -563,16 +572,21 @@ void stateMachine(){
         lcd.print(" \364"); // Ohm symbol (Omega) octal (244 in decimal)
         button.check();
         if(button.wasClicked())
+        {
+          buttonWasClicked();
           EEPROM.write(EE_resistanceAddress, (EEPROM.read(EE_resistanceAddress)+1)%numResistanceSteps);
+        }
         if(button.wasHeld())
+        {
+          buttonWasHeld();
 //          state = 4;
           state++;
+        }
         break;
       }
 
       case(kSTATE_MATERIAL):  // adjust material
       {
-        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Coil Material:");
         lcd.setCursor(0,1);
@@ -612,16 +626,21 @@ void stateMachine(){
 
         button.check();
         if(button.wasClicked())
+        {
+          buttonWasClicked();
           EEPROM.write(EE_materialAddress, (EEPROM.read(EE_materialAddress)+1)%numMaterialProgs);
+        }
         if(button.wasHeld())
+        {
+          buttonWasHeld();
 //          state = 5;
           state++;
+        }
         break;
       }
 
       case(kSTATE_TEMPERATURE):  // adjust temperature
       {
-        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Coil Temperature:");
         lcd.setCursor(0,1);
@@ -648,16 +667,21 @@ void stateMachine(){
         }
         button.check();
         if(button.wasClicked())
+        {
+          buttonWasClicked();
           EEPROM.write(EE_temperatureAddress, (EEPROM.read(EE_temperatureAddress)+1)%numTemperatureSteps);
+        }
         if(button.wasHeld())
+        {
+          buttonWasHeld();
 //          state = 4;
           state++;
+        }
         break;
       }
 
       case(kSTATE_TEMPERATURE_UNITS):  // adjust temperature units
       {
-        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Temperature in:");
         lcd.setCursor(0,1);
@@ -682,10 +706,17 @@ void stateMachine(){
         }
         button.check();
         if(button.wasClicked())
+        {
+          buttonWasClicked();
           EEPROM.write(EE_temperatureUnitsAddress, (EEPROM.read(EE_temperatureUnitsAddress)+1)%numTemperatureUnitsSteps);
+        }
         if(button.wasHeld())
+        {
+          buttonWasHeld();
+        
 //          state = 4;
           state++;
+        }
         break;
       }
 
@@ -696,7 +727,6 @@ void stateMachine(){
           case(0):
           {
         //   Print Battery Voltage when vaping
-            lcd.clear();
             lcd.setCursor(0,0);
             lcd.print("Battery Voltage:");
             lcd.setCursor(0,1);
@@ -708,7 +738,6 @@ void stateMachine(){
           case(1):
           {
             //   Print Voltage below coil
-            lcd.clear();
             lcd.setCursor(0,0);
             lcd.print("FET Voltage:");
             lcd.setCursor(0,1);
@@ -720,7 +749,6 @@ void stateMachine(){
           case(2):
           {
             //   Print  Voltage Drop across coil
-            lcd.clear();
             lcd.setCursor(0,0);
             lcd.print("Coil Voltage:");
             lcd.setCursor(0,1);
@@ -734,7 +762,6 @@ void stateMachine(){
             //   Print power through coil
             int batteryVoltageDrop = EEPROM.read(EE_batteryVoltageDropAddress);
             int coilVoltageDrop = EEPROM.read(EE_coilVoltageDropAddress);
-            lcd.clear();
             lcd.setCursor(0,0);
             lcd.print("Coil Power:");
             lcd.setCursor(0,1);
@@ -747,7 +774,6 @@ void stateMachine(){
           case(4):
           {
             //   Print voltage at current measuring resistance
-            lcd.clear();
             lcd.setCursor(0,0);
             lcd.print("Current Volt:");
             lcd.setCursor(0,1);
@@ -758,16 +784,22 @@ void stateMachine(){
         }
         button.check();
         if(button.wasClicked())
+        {
+          buttonWasClicked();
           EEPROM.write(EE_programVoltageDropAddress, (EEPROM.read(EE_programVoltageDropAddress)+1)%numVoltageDropProgs);
+        }
         if(button.wasHeld())
-//          state = 6;
+        {
+          buttonWasHeld();
+//         state = 6;
           state++;
+        }
         break;
       }
 
       case(kSTATE_READER):
       {
-        lcd.clear();
+//        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("LCD Program:");
         lcd.setCursor(0,1);
@@ -797,27 +829,36 @@ void stateMachine(){
 
         button.check();
         if(button.wasClicked())
+        {
+          buttonWasClicked();
           EEPROM.write(EE_programAddress, (EEPROM.read(EE_programAddress)+1)%numProgs);
+        }
         if(button.wasHeld())
+        {
+          buttonWasHeld();
 //          state = 7;
           state++;
+        }
         break;
       }
 
       case(kSTATE_ADDRESS):
       {
-        lcd.clear();
+//        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("lets roll");
         button.check();
         if(button.wasHeld())
+        {
+          buttonWasHeld();
           state++;;
+        }
         break;
       }
 
       case(kSTATE_DEFAULTS):
       {
-        lcd.clear();
+//        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Reset defaults?");
         lcd.setCursor(0,1);
@@ -827,8 +868,12 @@ void stateMachine(){
           lcd.print("NO"); // 0 = NO
         button.check();
         if(button.wasClicked())
+        {
+          buttonWasClicked();
           EEPROM.write(EE_defaultsAddress, (EEPROM.read(EE_defaultsAddress)+1)%numDefaultsSteps);
+        }
         if(button.wasHeld()) {
+          buttonWasHeld();
           if (EEPROM.read(EE_defaultsAddress)) {
             state = kSTATE_SURE;
           }
@@ -840,7 +885,7 @@ void stateMachine(){
 
       case(kSTATE_CONTROL_TYPE):  // adjust temperature units
       {
-        lcd.clear();
+//       lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Control by:");
         lcd.setCursor(0,1);
@@ -865,17 +910,23 @@ void stateMachine(){
         }
         button.check();
         if(button.wasClicked())
+        {
+          buttonWasClicked();
           EEPROM.write(EE_controlTypeAddress, (EEPROM.read(EE_controlTypeAddress)+1)%numControlTypeSteps);
+        }
         if(button.wasHeld())
+        {
 //          state = 4;
+          buttonWasHeld();
           state++;
+        }
         break;
       }
 
       
      case(kSTATE_SURE):
       {
-        lcd.clear();
+//        lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Are you sure?");
         lcd.setCursor(0,1);
@@ -885,7 +936,10 @@ void stateMachine(){
           lcd.print("NO"); // 0 = NO
         button.check();
         if(button.wasClicked())
+        {
+          buttonWasClicked();
           EEPROM.write(EE_defaultsSureAddress, (EEPROM.read(EE_defaultsSureAddress)+1)%numDefaultsSureSteps);
+        }
         if(button.wasHeld()) {
           if (EEPROM.read(EE_defaultsSureAddress)) {
             lcd.clear();
@@ -895,8 +949,12 @@ void stateMachine(){
             EE_Presets();
           }
           else
+          {
             EEPROM.write(EE_defaultsSureAddress, 0); //Reset back to zero/NO - else you are presents with "Yes" at the next "Are you sure?"
+          }
+          buttonWasHeld();
           state = 0;  // go back to state 0
+          
         }
         break;
       }
@@ -908,6 +966,14 @@ void stateMachine(){
 
     delay(30); 
   }
+}
+
+void buttonWasClicked(){
+  lcd.clear();
+}
+
+void buttonWasHeld(){
+  lcd.clear();
 }
 
 void displayProgram() {
