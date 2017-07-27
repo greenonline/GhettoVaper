@@ -1,8 +1,35 @@
 #include "mButton.h"
-#include "LiquidCrystalFast.h"
-#include "BigCharacters.h"
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
+
+//Select which LCD you are using - 1602 is the default
+// Testing with DFRobot 1602 display (default standard 1602 shield)
+//#define __Use_DFRobot_1602_LCD__
+#define __Use_TFT_ILI9163C_Extended_Char_LCD__
+//#define __Use_1602_LCD__
+
+// Switch S2 behaviour - do not change here - see mButton.h
+//#define __S2_To_HIGH__
+//#define __S2_To_LOW__  // default to this, as original
+//#define __MULTI_PUSH_S2__
+
+
+
+
+#if defined (__Use_DFRobot_1602_LCD__)
+#include <LiquidCrystalFast.h>
+#include "BigCharacters.h"
+#elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <TFT_ILI9163C_Extended_Char.h>
+#elif defined (__Use_1602_LCD__)
+#include "LiquidCrystalFast.h"
+#include "BigCharacters.h"
+#else
+#include "LiquidCrystalFast.h"
+#include "BigCharacters.h"
+#endif
 
 /*  
  *  Filename: GhettoVaper.ino 
@@ -66,22 +93,58 @@
  
  */
 
-// Switch S2 behaviour - do not change here - see mButton.h
-//#define __S2_To_HIGH__
-//#define __S2_To_LOW__  // default to this, as original
-//#define __MULTI_PUSH_S2__
+/*
+Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 
-// Testing with DFRobot 1602 display
-#define __Using_DFRobot_1602_LCD__
+ LED to 3.3V
+ SCK to D13
+ SDA to D11
+ A0 to D8
+ RST to D9
+ CS to D10
+ GND to GND
+ VCC to 3.3V 
+ */
+ 
+// All wiring required, for TFT_ILI9163C, only 3 defines for hardware SPI on 328P
+#define __DC 9
+#define __CS 10
+// MOSI --> (SDA) --> D11
+#define __RST 12
+// SCLK --> (SCK) --> D13
+
+// Color definitions for TFT_ILI9163C
+#define  BLACK   0x0000
+#define BLUE    0x001F
+#define RED     0xF800
+#define GREEN   0x07E0
+#define CYAN    0x07FF
+#define MAGENTA 0xF81F
+#define YELLOW  0xFFE0  
+#define WHITE   0xFFFF
+
+// TextSize = 1 gives display 20 characters wide, 14 characters high
+// TextSize = 2 gives display 10 characters wide, 7 characters high
+// TextSize = 3 gives display 7 characters wide, 4 characters high
+const int kTestSize = 1;
+
 
 // Constants
 
 // Pins
 const int fetPin                   = 11;
+#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
 const int lcd_backlight            = 2;
+#endif
 #if defined (__Using_DFRobot_1602_LCD__)
 const int secondButton             = 12;  // For DR Robot 16x02 display
 const int batteryPin               = A3;  // For DR Robot 16x02 display
+#elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+const int secondButton             = 6;  // Original
+const int batteryPin               = A0;  // Original
+#elif defined (__Use_1602_LCD__)
+const int secondButton             = 10;  // Original
+const int batteryPin               = A0;  // Original
 #else
 const int secondButton             = 10;  // Original
 const int batteryPin               = A0;  // Original
@@ -234,9 +297,13 @@ long startTime = 0;
 // For timing
 unsigned long lastMillis = 0;
 
+#if defined (__Use_DFRobot_1602_LCD__)
 // initialize the library with the numbers of the interface pins
-#if defined (__Using_DFRobot_1602_LCD__)
 LiquidCrystalFast lcd(8, 255,  9,  4,  5,  6, 7);   // For DFRobot 1602 shield
+#elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+TFT_ILI9163C_Extended_Char lcd = TFT_ILI9163C_Extended_Char(__CS, __DC, __RST); 
+#elif defined (__Use_1602_LCD__)
+LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);   // Original GhettoVape III wiring
 #else
 LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);   // Original GhettoVape III wiring
 #endif
@@ -247,14 +314,6 @@ MomentaryButton button(secondButton);
 
 
 void setup() {
-
-  // set up the LCD's number of rows and columns: 
-  lcd.begin(16, 2);
-
-  // Turn on the backlight
-  pinMode(lcd_backlight, OUTPUT);
-  analogWrite(lcd_backlight, 255);
-
   // Set up analogue input pins:
   pinMode(batteryPin, INPUT);
   pinMode(coilVoltageDropPin, INPUT);
@@ -263,6 +322,17 @@ void setup() {
   button.setup();            // set as INPUT, set HIGH (need to change this to LOW, for modified schematic)
   button.setThreshold(300);  // 1 sec between short and long hold
 
+#if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+  lcd.begin();
+  lcd.setTextColor(WHITE);  
+  lcd.setTextSize(kTestSize);
+//  lcd.fillScreen();
+#else
+  // set up the LCD's number of rows and columns: 
+  lcd.begin(16, 2);
+  // Turn on the backlight
+  pinMode(lcd_backlight, OUTPUT);
+  analogWrite(lcd_backlight, 255);
   // assigns each segment a write number
   // There was a problem drawing the "C" in "JUICE" with the original version
   // However, only eight custom characters can be assigned, therefore 0=8 and 1=9 - so there are two characters too many
@@ -280,6 +350,8 @@ void setup() {
   //lcd.createChar(8, blank);
   //lcd.createChar(9, cross);
   lcd.createChar(7, cross);
+#endif
+  lcd.clear();
 }
 
 void loop() {
@@ -297,8 +369,6 @@ void loop() {
     stateMachine();
   }
   else {                             // if S2 does not meet the if
-
-
     // Read the voltage across the coil
     EEPROM.write(EE_batteryVoltageDropAddress,analogRead(batteryPin));  // store the analogue read
     EEPROM.write(EE_coilVoltageDropAddress,analogRead(coilVoltageDropPin));  // store the analogue read
@@ -395,6 +465,10 @@ void loop() {
           //      the last used value, which was used when using voltage control?
           //      a minimum point, say 1V?
           // What value does desiredVoltage have when first switched on? If we assign zero in the declaration then fine
+          // NOTE: You can not read an analogue output, without disconnecting the timer. The pin remains an output but stops PWM
+          //      See https://forum.arduino.cc/index.php?topic=64965.0
+          // NOTE: If 0 or 255 is written to the PWM pin, the timer is disengaged and it acts as a simple digitalWrite()
+          //      See http://forum.arduino.cc/index.php?topic=122543.0
           // Should we remember the last used voltage in EEPROM? 
           //      Yes, as powering off the device, will retain the temperature controll settings, but lose the desiredVoltage
           //      Use a separate EEPROM setting, such as EE_voltage4TemperatureAddress
@@ -839,6 +913,7 @@ void displayProgram() {
       //JUICE
       do 
       {
+#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
         customJ(0);    // displays custom 0 on the LCD
         delay(interval);
         customU(4);
@@ -851,6 +926,8 @@ void displayProgram() {
         delay(interval);
         lcd.clear();
         delay(interval);
+#else
+#endif
       }
       while(true);
       break;
@@ -860,6 +937,7 @@ void displayProgram() {
     {
       do 
       {
+#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
         customF(0);    // displays custom 0 on the LCD
         customR(3);
         customE(7);
@@ -868,6 +946,8 @@ void displayProgram() {
         delay(interval);
         lcd.clear(); 
         delay(interval);
+#else
+#endif
       }
       while(true);
       break;
