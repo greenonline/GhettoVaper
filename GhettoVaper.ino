@@ -73,22 +73,45 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
  VCC to 3.3V 
  */
 
-#include "mButton.h"
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
 
+// ******************** DEFINES - START ********************
+// Test
+//#define __Debug__ // This should normally be commented out
+#define __Use_MMButton__ // Use new version - This should normally be uncommented out (i.e. normally do NOT comment out)
+// MButton is the default - however MButton can only be used with pull down buttons 
+
+
 //Select which LCD you are using - 1602 is the default
 // Testing with DFRobot 1602 display (default standard 1602 shield)
-#define __Use_DFRobot_1602_LCD__
-//#define __Use_TFT_ILI9163C_Extended_Char_LCD__
+//#define __Use_DFRobot_1602_LCD__
+#define __Use_TFT_ILI9163C_Extended_Char_LCD__
 //#define __Use_1602_LCD__
+#if defined (__Use_DFRobot_1602_LCD__) && defined(__Use_TFT_ILI9163C_Extended_Char_LCD__)
+#error Oops!  You have defined both __Use_DFRobot_1602_LCD__ and __Use_TFT_ILI9163C_Extended_Char_LCD__. You can only define one… Which display are you using??
+#endif
 
-// Switch S2 behaviour - !!!!DO NOT change here!!!! - see mButton.h
-//#define __S2_To_HIGH__
+// Switch S2 behaviour
+#define __S2_To_HIGH__
 //#define __S2_To_LOW__  // default to this, as original
 //#define __MULTI_PUSH_S2__
+#if defined (__S2_To_HIGH__) && defined(__S2_To_LOW__)
+#error Oops!  You have defined both __S2_To_HIGH__ and __S2_To_LOW__. You can only define one… Does your button pull up or pull down? Or, to put it another way, do you want you input to be pulled down, or pulled up?
+#endif
 
 
+// Define message
+// Use Star Wars text
+#define __Use_Star_wars__
+
+// ******************** DEFINES - END **********************
+
+#if defined (__Use_MMButton__)
+#include "MMButton.h"
+#else
+#include "MButton.h"
+#endif
 
 
 #if defined (__Use_DFRobot_1602_LCD__)
@@ -115,7 +138,7 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 // SCLK --> (SCK) --> D13
 
 // Color definitions for TFT_ILI9163C
-#define  BLACK   0x0000
+#define BLACK   0x0000
 #define BLUE    0x001F
 #define RED     0xF800
 #define GREEN   0x07E0
@@ -128,6 +151,17 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 // TextSize = 2 gives display 10 characters wide, 7 characters high
 // TextSize = 3 gives display 7 characters wide, 4 characters high
 const int kTestSize = 1;
+
+#if defined (__Use_DFRobot_1602_LCD__)
+const int kScreenWidth = 16;
+#elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+const int kScreenWidth = 20;
+#elif defined (__Use_1602_LCD__)
+const int kScreenWidth = 16;
+#else
+const int kScreenWidth = 16;
+#endif
+
 
 
 // Constants
@@ -142,15 +176,23 @@ const int lcd_backlight            = 2;
 #if defined (__Use_DFRobot_1602_LCD__)
 const int secondButton             = 12;  // For DR Robot 16x02 display
 const int batteryPin               = A3;  // For DR Robot 16x02 display
+const int kLCDWidth = 16;
+const int kLCDHeight = 2;
 #elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
 const int secondButton             = 6;   // For TFT_ILI9163C
 const int batteryPin               = A0;  // Original
+const int kLCDWidth = 20;
+const int kLCDHeight = 14;
 #elif defined (__Use_1602_LCD__)
 const int secondButton             = 10;  // Original
 const int batteryPin               = A0;  // Original
+const int kLCDWidth = 16;
+const int kLCDHeight = 2;
 #else
 const int secondButton             = 10;  // Original
 const int batteryPin               = A0;  // Original
+const int kLCDWidth = 16;
+const int kLCDHeight = 2;
 #endif
 
 const int coilVoltageDropPin       = A1;  // Voltage across FET, when FET goes directly to ground - otherwise it is the voltage across the FET and the measuring resistance
@@ -239,7 +281,13 @@ const int kPM_Diag_BatVoltRead_EE  = 4;
 const int kPM_Diag_FETVoltRead_EE  = 5;
 const int kPM_Diag_CurVoltRead_EE  = 6;
 
-const char speedMessage[] = {"Vape on it!!! yeah\0"}; // use this form
+#if defined (__Use_Star_wars__)
+const char speedMessage[] = {"It is a period of civil war. Rebel spaceships, striking from a hidden base, have won their first victory against the evil Galactic Empire.\
+ During the battle, Rebel spies managed to steal secret plans to the Empire's ultimate weapon, the DEATH STAR, an armored space station with enough power to destroy an entire planet.\
+ Pursued by the Empire's sinister agents, Princess Leia races home aboard her starship, custodian of the stolen plans that can save her people and restore freedom to the galaxy....\0"}; 
+#else
+const char speedMessage[] = {"Vape on it!!! yeah\0"}; // default scrolling text
+#endif
 
 // EEPROM addresses
 const int EE_programAddress             =  0;
@@ -294,8 +342,6 @@ int desiredVoltage = 0; // For safety - We can assign a stored value, from EEPRO
 int state = 0; 
 int wpm = 350;
 int readPeriod = 60000 / wpm; //period in ms
-  const int kLCDWidth = 16;
-  const int kLCDHeight = 2;
 char thisWord[30];
 char lastWord[30];
 char allWords[kLCDHeight][kLCDWidth];
@@ -318,21 +364,41 @@ LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);   // Original GhettoVape III wir
 // LCD pins:          RS  RW  EN  D4 D5  D6 D7
 
 // Create a button
-MomentaryButton button(secondButton);
-
+#if defined (__Use_MMButton__)
+MMButton button(secondButton);
+#else
+MButton button(secondButton);
+#endif
 
 void setup() {
+
+#if defined (__Debug__)
+// Test EE defaults
+  EE_Presets_Test();
+#endif
+  
   // Set up analogue input pins:
   pinMode(batteryPin, INPUT);
   pinMode(coilVoltageDropPin, INPUT);
   pinMode(currentMeasurePin, INPUT);
 
   button.setup();            // set as INPUT, set HIGH (need to change this to LOW, for modified schematic)
+//Temporary comment for testing with MomentaryButton
+#if !defined (__Use_MomentaryButton__) // only mButton derived objects can use setThreshold()
   button.setThreshold(300);  // 1 sec between short and long hold
+#endif
+
+#if defined (__Use_MMButton__) // only MMButton derived objects can use setPullUpDown()
+#if defined (__S2_To_HIGH__)
+button.setPullUpDown(LOW);  // Pull up button = pull down resistor at input
+#else
+button.setPullUpDown(HIGH);  // Pull down button = pull up resistor at input
+#endif
+#endif
 
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
   lcd.begin();
-  lcd.setTextColor(WHITE);  
+  lcd.setTextColor(WHITE, BLACK);  
   lcd.setTextSize(kTestSize);
 //  lcd.fillScreen();
 #else
@@ -1231,15 +1297,64 @@ void speedRead3(){
         lastScreen=true;      
       allWords[kLCDHeight-1][i] = '\0';
       if (!firstScreen){
-        for (int height=0; height<kLCDHeight;height++) {
-      
+        for (int height=0; height<kLCDHeight;height++) {      
           lcd.setCursor(0,height);
-          for (int blank = 0; blank<kLCDWidth;blank++)lcd.print(" ");
+          for (int blank = 0; blank<kLCDWidth;blank++) {
+            lcd.print(" ");
+          }
           lcd.setCursor(8-strlen(allWords[height])/2,height);
           lcd.print(allWords[height]);
         }
-     } else {  //first screen, i.e. start of message starts by scrolling up.  - This is better looking
+      } else {  //first screen, i.e. start of message starts by scrolling up.  - This is better looking
           lcd.setCursor(8-strlen(allWords[kLCDHeight-1])/2,kLCDHeight-1);
+          lcd.print(allWords[kLCDHeight-1]);
+      }
+      if (allWords[kLCDHeight-1][i-1] == '.'  || allWords[kLCDHeight-1][i-1] == ',')
+        delay(2500);
+      else
+        delay(1000);
+      for (int n=1; n<kLCDHeight;n++) 
+        strcpy(allWords[n-1], allWords[n]);
+      firstScreen=false;
+    }
+  }
+}
+
+// quicker? Blank only the number of previous word
+void speedRead4(){
+  int i;
+  strPos = 0;
+  boolean firstScreen=true;
+  boolean lastScreen=false;
+  boolean endIt=false;
+  lcd.clear();
+  while((speedMessage[strPos] != '\0' || lastScreen) && !endIt){
+    if (lastScreen) {
+      lastScreen=false;
+      endIt=true;
+    }
+    for (int y=0; y<kLCDHeight; y++) {
+      for(i = 0; speedMessage[strPos] != ' ' && speedMessage[strPos] != '\0'; i++){
+        allWords[kLCDHeight-1][i] = speedMessage[strPos++];
+      }
+      if (speedMessage[strPos] != '\0') 
+        strPos++;
+      else
+        lastScreen=true;      
+      allWords[kLCDHeight-1][i] = '\0';
+      if (!firstScreen){
+        lcd.setCursor(0,0);                      // For the top line, becuase we can't remember the previous off screen word...
+        lcd.print("                ");           // ...blank the whole line
+        for (int height=1; height<kLCDHeight;height++) {      // quicker? Blank only the number of previous word
+          lcd.setCursor(kScreenWidth/2-strlen(allWords[height-1])/2,height);  // set cursor to start of previous word
+          for (int blank = 0; blank<strlen(allWords[height-1]);blank++) {     // for the length of the previous word...
+            lcd.print(" ");                                                   // print blanks
+          }
+          lcd.setCursor(kScreenWidth/2-strlen(allWords[height])/2,height);    // set cursor half way across the screen, and indented half the word length
+          lcd.print(allWords[height]);
+        }
+      } else {  //first screen, i.e. start of message starts by scrolling up.  - This is better looking
+          lcd.setCursor(kScreenWidth/2-strlen(allWords[kLCDHeight-1])/2,kLCDHeight-1);
           lcd.print(allWords[kLCDHeight-1]);
       }
       if (allWords[kLCDHeight-1][i-1] == '.'  || allWords[kLCDHeight-1][i-1] == ',')
@@ -1279,7 +1394,7 @@ boolean checkOutOfRange(){
 }
 
 void EE_Presets(){
-  EEPROM.write(EE_programAddress, 0);  // Prints "JUICE" by default
+  EEPROM.write(EE_programAddress, kPM_Juice);  // Prints "JUICE" by default
   EEPROM.write(EE_voltageAddress, 0);
   EEPROM.write(EE_resistanceAddress, 1);  // should default to 1 Ohm or 0.5 Ohm, or what? Can not be zero as it gives an infinite power result
   EEPROM.write(EE_powerAddress, 0);       // should default to 30 W, for safety?
@@ -1294,6 +1409,26 @@ void EE_Presets(){
   EEPROM.write(EE_defaultsSureAddress, 0);         // default to "No I am not sure"
   EEPROM.write(EE_controlTypeAddress, 0);          // default to voltage control
   EEPROM.write(EE_currentMeasureAddress, 0);       // default to 0 - no current flow
+//  EEPROM.write(EE_voltage4PowerAddress, 0);        // default to 0 for safety - this is set when the power control option is selected, or power is adjusted
+//  EEPROM.write(EE_voltage4TemperatureAddress, 0);  // default to 0 for safety - this is set when the temperature control option is selected, or temperature is adjusted
+}
+
+void EE_Presets_Test(){
+  EEPROM.write(EE_programAddress, kPM_SpeedRead);  // Prints "JUICE" by default - This actually prints star wars
+//  EEPROM.write(EE_voltageAddress, 0);
+//  EEPROM.write(EE_resistanceAddress, 1);  // should default to 1 Ohm or 0.5 Ohm, or what? Can not be zero as it gives an infinite power result
+//  EEPROM.write(EE_powerAddress, 0);       // should default to 30 W, for safety?
+//  EEPROM.write(EE_coilVoltageDropAddress, 0);
+//  EEPROM.write(EE_programVoltageDropAddress, 0);
+//  EEPROM.write(EE_batteryVoltageDropAddress, 0);
+//  EEPROM.write(EE_programMaterialAddress, kMaterial_SS316);  // not needed as we have EE_material address
+//  EEPROM.write(EE_materialAddress, kMaterial_SS316);  // default SS 316
+//  EEPROM.write(EE_temperatureAddress, 0);
+//  EEPROM.write(EE_temperatureUnitsAddress, kTemperatureUnits_C);  // default to °C
+//  EEPROM.write(EE_defaultsAddress, 0);             // default to "Do not reset"
+//  EEPROM.write(EE_defaultsSureAddress, 0);         // default to "No I am not sure"
+//  EEPROM.write(EE_controlTypeAddress, 0);          // default to voltage control
+//  EEPROM.write(EE_currentMeasureAddress, 0);       // default to 0 - no current flow
 //  EEPROM.write(EE_voltage4PowerAddress, 0);        // default to 0 for safety - this is set when the power control option is selected, or power is adjusted
 //  EEPROM.write(EE_voltage4TemperatureAddress, 0);  // default to 0 for safety - this is set when the temperature control option is selected, or temperature is adjusted
 }
