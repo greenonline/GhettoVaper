@@ -78,18 +78,27 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 
 // ******************** DEFINES - START ********************
 // Test
-//#define __Debug__ // This should normally be commented out
+#define __Debug__ // This should normally be commented out
 #define __Use_MMButton__ // Use new version - This should normally be uncommented out (i.e. normally do NOT comment out)
 // MButton is the default - however MButton can only be used with pull down buttons 
 
 
-//Select which LCD you are using - 1602 is the default
+// Select which LCD you are using - 1602 is the default
 // Testing with DFRobot 1602 display (default standard 1602 shield)
 //#define __Use_DFRobot_1602_LCD__
-#define __Use_TFT_ILI9163C_Extended_Char_LCD__
+//#define __Use_TFT_ILI9163C_Extended_Char_LCD__ // for 0.96" colour display
+#define __Use_SSD1306_LCD__  // For SSD1306 128x32 0.91"
 //#define __Use_1602_LCD__
-#if defined (__Use_DFRobot_1602_LCD__) && defined(__Use_TFT_ILI9163C_Extended_Char_LCD__)
-#error Oops!  You have defined both __Use_DFRobot_1602_LCD__ and __Use_TFT_ILI9163C_Extended_Char_LCD__. You can only define one… Which display are you using??
+
+// Checks for multiple display compiler defines
+#if defined (__Use_DFRobot_1602_LCD__) && defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+#error Oops!  You have defined both __Use_DFRobot_1602_LCD__ and __Use_TFT_ILI9163C_Extended_Char_LCD__. You can only define one. Which display are you using??
+#endif
+#if defined (__Use_DFRobot_1602_LCD__) && defined (__Use_SSD1306_LCD__)
+#error Oops!  You have defined both __Use_DFRobot_1602_LCD__ and __Use_SSD1306_LCD__. You can only define one. Which display are you using??
+#endif
+#if defined (__Use_SSD1306_LCD__) && defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+#error Oops!  You have defined both __Use_SSD1306_LCD__ and __Use_TFT_ILI9163C_Extended_Char_LCD__. You can only define one. Which display are you using??
 #endif
 
 // Switch S2 behaviour
@@ -97,13 +106,13 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 //#define __S2_To_LOW__  // default to this, as original
 //#define __MULTI_PUSH_S2__
 #if defined (__S2_To_HIGH__) && defined(__S2_To_LOW__)
-#error Oops!  You have defined both __S2_To_HIGH__ and __S2_To_LOW__. You can only define one… Does your button pull up or pull down? Or, to put it another way, do you want you input to be pulled down, or pulled up?
+#error Oops!  You have defined both __S2_To_HIGH__ and __S2_To_LOW__. You can only define one. Does your button pull up or pull down? Or, to put it another way, do you want you input to be pulled down, or pulled up?
 #endif
 
 
 // Define message
 // Use Star Wars text
-#define __Use_Star_wars__
+//#define __Use_Star_wars__
 
 // ******************** DEFINES - END **********************
 
@@ -121,6 +130,17 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <TFT_ILI9163C_Extended_Char.h>
+#elif defined (__Use_SSD1306_LCD__)
+#include <Arduino.h>
+#include <U8g2lib.h>
+#include <SSD1306_Extended_Char.h>
+//#ifdef U8X8_HAVE_HW_SPI
+//#include <SPI.h>
+//#endif
+//#ifdef U8X8_HAVE_HW_I2C
+#include <Wire.h>
+//#endif
+//#include <SSD1306_Extended_Char.h>
 #elif defined (__Use_1602_LCD__)
 #include "LiquidCrystalFast.h"
 #include "BigCharacters.h"
@@ -130,6 +150,7 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 #endif
 
  
+#if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
 // All wiring required, for TFT_ILI9163C, only 3 defines for hardware SPI on 328P
 #define __DC 9
 #define __CS 10
@@ -146,22 +167,26 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 #define MAGENTA 0xF81F
 #define YELLOW  0xFFE0  
 #define WHITE   0xFFFF
+#endif
 
 // TextSize = 1 gives display 20 characters wide, 14 characters high
 // TextSize = 2 gives display 10 characters wide, 7 characters high
 // TextSize = 3 gives display 7 characters wide, 4 characters high
 const int kTestSize = 1;
 
+/* Redundant
 #if defined (__Use_DFRobot_1602_LCD__)
 const int kScreenWidth = 16;
 #elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
 const int kScreenWidth = 20;
+#elif defined (__Use_SSD1306_LCD__)
+const int kScreenWidth = 20;  //SSD1306???
 #elif defined (__Use_1602_LCD__)
 const int kScreenWidth = 16;
 #else
 const int kScreenWidth = 16;
 #endif
-
+*/
 
 
 // Constants
@@ -176,23 +201,29 @@ const int lcd_backlight            = 2;
 #if defined (__Use_DFRobot_1602_LCD__)
 const int secondButton             = 12;  // For DR Robot 16x02 display
 const int batteryPin               = A3;  // For DR Robot 16x02 display
-const int kLCDWidth = 16;
-const int kLCDHeight = 2;
+const int kLCDWidth                = 16;  // Width in characters
+const int kLCDHeight               = 2;   // Height in characters
 #elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
 const int secondButton             = 6;   // For TFT_ILI9163C
 const int batteryPin               = A0;  // Original
-const int kLCDWidth = 20;
-const int kLCDHeight = 14;
+const int kLCDWidth                = 20;  // Width in characters
+const int kLCDHeight               = 14;  // Height in characters
+#elif defined (__Use_SSD1306_LCD__)
+const int secondButton             = 12;   // For SSD1306 128x32 0.91" // For testing in conjuction with DFRobot shield, use same second button
+//const int secondButton             = 6;   // For SSD1306 128x32 0.91"
+const int batteryPin               = A0;  // Original
+const int kLCDWidth                = 16;  // Width in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
+const int kLCDHeight               = 3;  // Height in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
 #elif defined (__Use_1602_LCD__)
 const int secondButton             = 10;  // Original
 const int batteryPin               = A0;  // Original
-const int kLCDWidth = 16;
-const int kLCDHeight = 2;
+const int kLCDWidth                = 16;
+const int kLCDHeight               = 2;
 #else
 const int secondButton             = 10;  // Original
 const int batteryPin               = A0;  // Original
-const int kLCDWidth = 16;
-const int kLCDHeight = 2;
+const int kLCDWidth                = 16;
+const int kLCDHeight               = 2;
 #endif
 
 const int coilVoltageDropPin       = A1;  // Voltage across FET, when FET goes directly to ground - otherwise it is the voltage across the FET and the measuring resistance
@@ -356,6 +387,13 @@ unsigned long lastMillis = 0;
 LiquidCrystalFast lcd(8, 255,  9,  4,  5,  6, 7);   // For DFRobot 1602 shield
 #elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
 TFT_ILI9163C_Extended_Char lcd = TFT_ILI9163C_Extended_Char(__CS, __DC, __RST); 
+#elif defined (__Use_SSD1306_LCD__)
+// Page Buffer
+//U8G2_SSD1306_128X32_UNIVISION_1_HW_I2C lcd(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
+// Full buffer
+//U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C lcd(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
+// My extension
+SSD1306_Extended_Char lcd(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
 #elif defined (__Use_1602_LCD__)
 LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);   // Original GhettoVape III wiring
 #else
@@ -401,6 +439,26 @@ button.setPullUpDown(HIGH);  // Pull down button = pull up resistor at input
   lcd.setTextColor(WHITE, BLACK);  
   lcd.setTextSize(kTestSize);
 //  lcd.fillScreen();
+#elif defined (__Use_SSD1306_LCD__)
+  lcd.begin();
+//  lcd.setFont(u8g2_font_ncenB14_tr);
+//  lcd.setFont(u8g2_font_6x10_tf);
+  lcd.setFont(u8g2_font_6x10_mf);  // non tranparent font
+//  lcd.setFont(u8g2_font_ncenB08_tr);
+  lcd.setFontMode(0);  // non transparent font mode
+
+//  lcd.setFontRefHeightExtendedText();
+//  lcd.setDrawColor(1);
+//  lcd.setFontPosTop();
+//  lcd.setFontDirection(0);
+// setup hit test
+#if defined (__Debug__)
+  lcd.clearBuffer();          // clear the internal memory
+  lcd.drawStr(0,10,"Hello setup!");  // write something to the internal memory
+  lcd.sendBuffer();          // transfer internal memory to the display
+  delay(1000);
+#endif
+//end setup hit test
 #else
   // set up the LCD's number of rows and columns: 
   lcd.begin(16, 2);
@@ -427,11 +485,13 @@ button.setPullUpDown(HIGH);  // Pull down button = pull up resistor at input
 #endif
   lcd.clear();
 
-//  if (checkOutOfRange)
-//    EE_Presets();
+// Check for unitialised EEPROM
+  if (checkOutOfRange())
+    EE_Presets();
 }
 
 void loop() {
+
 
 #if defined (__S2_To_HIGH__)
   // For push S2 to HIGH
@@ -1041,13 +1101,24 @@ void stateMachine(){
 
 void buttonWasClicked(){
   lcd.clear();
+//#if defined (__Use_SSD1306_LCD__)
+//    lcd.sendBuffer();          // transfer internal memory to the display
+//#else
+//  lcd.clear();
+//#endif
 }
 
 void buttonWasHeld(){
   lcd.clear();
+//#if defined (__Use_SSD1306_LCD__)
+//    lcd.sendBuffer();          // transfer internal memory to the display
+//#else
+//  lcd.clear();
+//#endif
 }
 
 void displayProgram() {
+
   if (EEPROM.read(EE_programAddress)>=numProgs)  // if numProgs is out of range, on a freshly installed machine (bug fix)
     EEPROM.write(EE_programAddress,0); // set it to zero
   switch(EEPROM.read(EE_programAddress))
@@ -1057,7 +1128,7 @@ void displayProgram() {
       //JUICE
 //      do 
 //      {
-#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD__)
         customJ(0);    // displays custom 0 on the LCD
         delay(interval);
         customU(4);
@@ -1084,7 +1155,7 @@ void displayProgram() {
     {
 //      do 
 //      {
-#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD__)
         customF(0);    // displays custom 0 on the LCD
         customR(3);
         customE(7);
@@ -1105,7 +1176,7 @@ void displayProgram() {
 
     case(kPM_SpeedRead):
     {
-      speedRead3();
+      speedRead4();
       break;
     }
     
@@ -1327,8 +1398,14 @@ void speedRead4(){
   boolean firstScreen=true;
   boolean lastScreen=false;
   boolean endIt=false;
+
+//#if defined (__Use_SSD1306_LCD__)
+//  lcd.clearBuffer();          // clear the internal memory - not required as clear() is available
+//#else
   lcd.clear();
+//#endif
   while((speedMessage[strPos] != '\0' || lastScreen) && !endIt){
+
     if (lastScreen) {
       lastScreen=false;
       endIt=true;
@@ -1345,16 +1422,18 @@ void speedRead4(){
       if (!firstScreen){
         lcd.setCursor(0,0);                      // For the top line, becuase we can't remember the previous off screen word...
         lcd.print("                ");           // ...blank the whole line
+        lcd.setCursor(kLCDWidth/2-strlen(allWords[0])/2,0);    // set cursor half way across the screen, and indented half the word length
+        lcd.print(allWords[0]);                  // print first line out of loop, because, in the loop, we start at 1
         for (int height=1; height<kLCDHeight;height++) {      // quicker? Blank only the number of previous word
-          lcd.setCursor(kScreenWidth/2-strlen(allWords[height-1])/2,height);  // set cursor to start of previous word
+          lcd.setCursor(kLCDWidth/2-strlen(allWords[height-1])/2,height);  // set cursor to start of previous word
           for (int blank = 0; blank<strlen(allWords[height-1]);blank++) {     // for the length of the previous word...
             lcd.print(" ");                                                   // print blanks
           }
-          lcd.setCursor(kScreenWidth/2-strlen(allWords[height])/2,height);    // set cursor half way across the screen, and indented half the word length
+          lcd.setCursor(kLCDWidth/2-strlen(allWords[height])/2,height);    // set cursor half way across the screen, and indented half the word length
           lcd.print(allWords[height]);
         }
       } else {  //first screen, i.e. start of message starts by scrolling up.  - This is better looking
-          lcd.setCursor(kScreenWidth/2-strlen(allWords[kLCDHeight-1])/2,kLCDHeight-1);
+          lcd.setCursor(kLCDWidth/2-strlen(allWords[kLCDHeight-1])/2,kLCDHeight-1);
           lcd.print(allWords[kLCDHeight-1]);
       }
       if (allWords[kLCDHeight-1][i-1] == '.'  || allWords[kLCDHeight-1][i-1] == ',')
@@ -1364,18 +1443,22 @@ void speedRead4(){
       for (int n=1; n<kLCDHeight;n++) 
         strcpy(allWords[n-1], allWords[n]);
       firstScreen=false;
+#if defined (__Use_SSD1306_LCD__)
+//  lcd.drawStr(0,10,"Hello Vape2!");  // write something to the internal memory
+
+//    lcd.sendBuffer();          // transfer internal memory to the display
+#endif
     }
+#if defined (__Use_SSD1306_LCD__)
+//  lcd.drawStr(0,10,"Hello Vape!");  // write something to the internal memory
+
+//    lcd.sendBuffer();          // transfer internal memory to the display
+#endif
+
   }
 }
 
 
-//        if (y==0 && !firstScreen){
-//          lcd.setCursor(8-strlen(lastWord)/2,y);
-//          lcd.print(lastWord);
-//        } else {
-//          lcd.setCursor(8-strlen(thisWord)/2,y);
-//          lcd.print(thisWord);
-//        }
 
 
 boolean checkOutOfRange(){ 
@@ -1414,7 +1497,7 @@ void EE_Presets(){
 }
 
 void EE_Presets_Test(){
-  EEPROM.write(EE_programAddress, kPM_SpeedRead);  // Prints "JUICE" by default - This actually prints star wars
+  EEPROM.write(EE_programAddress, kPM_SpeedRead);  // Prints speedread by default, when debugging - This actually prints star wars, or "Vape on it!"
 //  EEPROM.write(EE_voltageAddress, 0);
 //  EEPROM.write(EE_resistanceAddress, 1);  // should default to 1 Ohm or 0.5 Ohm, or what? Can not be zero as it gives an infinite power result
 //  EEPROM.write(EE_powerAddress, 0);       // should default to 30 W, for safety?
