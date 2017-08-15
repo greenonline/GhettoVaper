@@ -1399,6 +1399,9 @@ void speedRead4(){
   boolean lastScreen=false;
   boolean endIt=false;
 
+#if defined (__Use_SSD1306_LCD__)
+  lcd.setPrintMode(false);  //turn off sendBuffer()
+#endif
 //#if defined (__Use_SSD1306_LCD__)
 //  lcd.clearBuffer();          // clear the internal memory - not required as clear() is available
 //#else
@@ -1444,18 +1447,13 @@ void speedRead4(){
         strcpy(allWords[n-1], allWords[n]);
       firstScreen=false;
 #if defined (__Use_SSD1306_LCD__)
-//  lcd.drawStr(0,10,"Hello Vape2!");  // write something to the internal memory
-
-//    lcd.sendBuffer();          // transfer internal memory to the display
+    lcd.sendBuffer();          // transfer internal memory to the display
 #endif
     }
-#if defined (__Use_SSD1306_LCD__)
-//  lcd.drawStr(0,10,"Hello Vape!");  // write something to the internal memory
-
-//    lcd.sendBuffer();          // transfer internal memory to the display
-#endif
-
   }
+#if defined (__Use_SSD1306_LCD__)
+  lcd.setPrintMode(true);  //turn back on sendBuffer()
+#endif
 }
 
 
