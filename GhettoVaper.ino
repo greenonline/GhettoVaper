@@ -140,7 +140,7 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 #include <TFT_ILI9163C_Extended_Char.h>
 #elif defined (__Use_SSD1306_LCD__)
 #include <Arduino.h>
-//#include <U8g2lib.h>  /not required, we are using SSD1306_Extended_Char
+//#include <U8g2lib.h>  //not required, we are using SSD1306_Extended_Char
 #include <SSD1306_Extended_Char.h>
 //#ifdef U8X8_HAVE_HW_SPI
 //#include <SPI.h>
@@ -580,6 +580,7 @@ void loop() {
   // For push S2 to LOW - default, as original
   if(!digitalRead(secondButton)) {   // if S2 is held
 #endif
+    lcd.clear();
     stateMachine();
   }
   else {                             // if S2 does not meet the if
@@ -1250,7 +1251,14 @@ void stateMachine(){
 }
 
 void buttonWasClicked(){
-  lcd.clear();
+//  lcd.clear();  //causes flashing
+
+  lcd.setCursor(0,1);
+  for (int n=0;n<kLCDWidth;n++)
+    lcd.print(" ");
+//  lcd.print("                ");
+
+  
 //#if defined (__Use_SSD1306_LCD__)
 //    lcd.sendBuffer();          // transfer internal memory to the display
 //#else
@@ -1335,17 +1343,23 @@ void displayProgram() {
     {
       if (millis()-lastMillis>1000){
         lastMillis=millis();
-        lcd.clear();
+//        lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("BAT ");
+        lcd.print("BAT     ");
+        lcd.setCursor(4,0);
         lcd.print(analogRead(batteryPin));
-        lcd.setCursor(8,0);
+        lcd.setCursor(9,0);
         lcd.print(analogRead(batteryPin)*5.2/1024);
+        lcd.setCursor(14,0);
+        lcd.print("V");
         lcd.setCursor(0,1);
-        lcd.print("FET ");
+        lcd.print("FET     ");
+        lcd.setCursor(4,1);
         lcd.print(analogRead(coilVoltageDropPin));
-        lcd.setCursor(8,1);
+        lcd.setCursor(9,1);
         lcd.print(analogRead(coilVoltageDropPin)*5.2/1024);
+        lcd.setCursor(14,1);
+        lcd.print("V");
       }
       break;
     }
@@ -1355,17 +1369,23 @@ void displayProgram() {
     {
       if (millis()-lastMillis>1000){
         lastMillis=millis();
-        lcd.clear();
+//        lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("BAT ");
+        lcd.print("BAT     ");
+        lcd.setCursor(4,0);
         lcd.print(analogRead(batteryPin));
-        lcd.setCursor(8,0);
+        lcd.setCursor(9,0);
         lcd.print(analogRead(batteryPin)*5.2/1024);
+        lcd.setCursor(14,0);
+        lcd.print("V");
         lcd.setCursor(0,1);
-        lcd.print("EEB ");
+        lcd.print("EEB     ");
+        lcd.setCursor(4,1);
         lcd.print(EEPROM.read(EE_batteryVoltageDropAddress));
-        lcd.setCursor(8,1);
+        lcd.setCursor(9,1);
         lcd.print(EEPROM.read(EE_batteryVoltageDropAddress)*5.2/1024);
+        lcd.setCursor(14,1);
+        lcd.print("V");
       }
       break;
     }
@@ -1375,17 +1395,23 @@ void displayProgram() {
     {
       if (millis()-lastMillis>1000){
         lastMillis=millis();
-        lcd.clear();
+//        lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("FET ");
+        lcd.print("FET     ");
+        lcd.setCursor(4,0);
         lcd.print(analogRead(coilVoltageDropPin));
-        lcd.setCursor(8,0);
+        lcd.setCursor(9,0);
         lcd.print(analogRead(coilVoltageDropPin)*5.2/1024);
+        lcd.setCursor(14,0);
+        lcd.print("V");
         lcd.setCursor(0,1);
-        lcd.print("EEF ");
+        lcd.print("EEF     ");
+        lcd.setCursor(4,1);
         lcd.print(EEPROM.read(EE_coilVoltageDropAddress));
-        lcd.setCursor(8,1);
+        lcd.setCursor(9,1);
         lcd.print(EEPROM.read(EE_coilVoltageDropAddress)*5.2/1024);
+        lcd.setCursor(14,1);
+        lcd.print("V");
       }
       break;
     }
@@ -1395,17 +1421,23 @@ void displayProgram() {
     {
       if (millis()-lastMillis>1000){
         lastMillis=millis();
-        lcd.clear();
+//        lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("CUR ");
+        lcd.print("CUR     ");
+        lcd.setCursor(4,0);
         lcd.print(analogRead(currentMeasurePin));
-        lcd.setCursor(8,0);
+        lcd.setCursor(9,0);
         lcd.print(analogRead(currentMeasurePin)*5.2/1024);
+        lcd.setCursor(14,0);
+        lcd.print("V");
         lcd.setCursor(0,1);
-        lcd.print("EEC ");
+        lcd.print("EEC     ");
+        lcd.setCursor(4,1);
         lcd.print(EEPROM.read(EE_currentMeasureAddress));
-        lcd.setCursor(8,1);
+        lcd.setCursor(9,1);
         lcd.print(EEPROM.read(EE_currentMeasureAddress)*5.2/1024);
+        lcd.setCursor(14,1);
+        lcd.print("V");
       }
       break;
     }
