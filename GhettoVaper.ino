@@ -78,7 +78,7 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 
 // ******************** DEFINES - START ********************
 // Test
-#define __Debug__ // This should normally be commented out
+//#define __Debug__ // This should normally be commented out
 #define __Use_MMButton__ // Use new version - This should normally be uncommented out (i.e. normally do NOT comment out)
 // MButton is the default - however MButton can only be used with pull down buttons 
 
@@ -109,10 +109,18 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 #error Oops!  You have defined both __S2_To_HIGH__ and __S2_To_LOW__. You can only define one. Does your button pull up or pull down? Or, to put it another way, do you want you input to be pulled down, or pulled up?
 #endif
 
+// Using which font?
+//#define __Use_Font_u8g2_font_6x10_mf__  // only this font overwrites correctly
+//#define __Use_Font_u8g2_font_6x10_tf__
+//#define __Use_Font_u8g2_font_ncenB08_tr__
+//#define __Use_Font_u8g2_font_ncenB14_tr__
+//#define __Use_Font_u8g2_font_unifont_t_symbols__
+#define __Use_Font_u8g2_font_pxplusibmvga8_m_all__  // this font works fine 8x16
+
 
 // Define message
 // Use Star Wars text
-//#define __Use_Star_wars__
+#define __Use_Star_wars__
 
 // ******************** DEFINES - END **********************
 
@@ -132,7 +140,7 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 #include <TFT_ILI9163C_Extended_Char.h>
 #elif defined (__Use_SSD1306_LCD__)
 #include <Arduino.h>
-#include <U8g2lib.h>
+//#include <U8g2lib.h>  /not required, we are using SSD1306_Extended_Char
 #include <SSD1306_Extended_Char.h>
 //#ifdef U8X8_HAVE_HW_SPI
 //#include <SPI.h>
@@ -167,12 +175,12 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 #define MAGENTA 0xF81F
 #define YELLOW  0xFFE0  
 #define WHITE   0xFFFF
-#endif
 
 // TextSize = 1 gives display 20 characters wide, 14 characters high
 // TextSize = 2 gives display 10 characters wide, 7 characters high
 // TextSize = 3 gives display 7 characters wide, 4 characters high
-const int kTestSize = 1;
+const int kTextSize = 1;
+#endif
 
 /* Redundant
 #if defined (__Use_DFRobot_1602_LCD__)
@@ -188,6 +196,15 @@ const int kScreenWidth = 16;
 #endif
 */
 
+// For TFT_ILI9163C 1.44" 128x128
+// TextSize = 1 gives display 20 characters wide, 14 characters high
+// TextSize = 2 gives display 10 characters wide, 7 characters high
+// TextSize = 3 gives display 7 characters wide, 4 characters high
+
+// For 0.91" 128x32
+// TextSize = 6x10 gives display 20 characters wide, 3 characters high
+// TextSize = 16x16 gives display 8 characters wide, 2 characters high
+// TextSize = 8x16 gives display 16 characters wide, 2 characters high - ???
 
 // Constants
 
@@ -212,8 +229,25 @@ const int kLCDHeight               = 14;  // Height in characters
 const int secondButton             = 12;   // For SSD1306 128x32 0.91" // For testing in conjuction with DFRobot shield, use same second button
 //const int secondButton             = 6;   // For SSD1306 128x32 0.91"
 const int batteryPin               = A0;  // Original
+#if defined (__Use_Font_u8g2_font_6x10_tf__) || defined (__Use_Font_u8g2_font_6x10_mf__)
+const int kLCDWidth                = 20;  // Width in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
+const int kLCDHeight               = 3;  // Height in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
+#elif defined (__Use_Font_u8g2_font_ncenB08_tr__)
+const int kLCDWidth                = 10;  // Width in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
+const int kLCDHeight               = 2;  // Height in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
+#elif defined (__Use_Font_u8g2_font_ncenB14_tr__)
+const int kLCDWidth                = 8;  // Width in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
+const int kLCDHeight               = 1;  // Height in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
+#elif defined (__Use_Font_u8g2_font_unifont_t_symbols__)
+const int kLCDWidth                = 8;  // Width in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
+const int kLCDHeight               = 2;  // Height in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
+#elif defined (__Use_Font_u8g2_font_pxplusibmvga8_m_all__)
+const int kLCDWidth                = 16;  // Width in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
+const int kLCDHeight               = 2;  // Height in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
+#else
 const int kLCDWidth                = 16;  // Width in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
 const int kLCDHeight               = 3;  // Height in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
+#endif
 #elif defined (__Use_1602_LCD__)
 const int secondButton             = 10;  // Original
 const int batteryPin               = A0;  // Original
@@ -408,10 +442,17 @@ MMButton button(secondButton);
 MButton button(secondButton);
 #endif
 
+/*
+ * 
+ *  SETUP
+ * 
+ * 
+ */
+
 void setup() {
 
 #if defined (__Debug__)
-// Test EE defaults
+// Set Test EE defaults
   EE_Presets_Test();
 #endif
   
@@ -437,26 +478,57 @@ button.setPullUpDown(HIGH);  // Pull down button = pull up resistor at input
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
   lcd.begin();
   lcd.setTextColor(WHITE, BLACK);  
-  lcd.setTextSize(kTestSize);
+  lcd.setTextSize(kTextSize);
 //  lcd.fillScreen();
 #elif defined (__Use_SSD1306_LCD__)
   lcd.begin();
-//  lcd.setFont(u8g2_font_ncenB14_tr);
-//  lcd.setFont(u8g2_font_6x10_tf);
+  lcd.enableUTF8Print();          // enable UTF
+#if defined (__Use_Font_u8g2_font_6x10_mf__)
   lcd.setFont(u8g2_font_6x10_mf);  // non tranparent font
-//  lcd.setFont(u8g2_font_ncenB08_tr);
+#elif defined (__Use_Font_u8g2_font_6x10_tf__)
+  lcd.setFont(u8g2_font_6x10_tf);
+#elif defined (__Use_Font_u8g2_font_ncenB08_tr__)
+  lcd.setFont(u8g2_font_ncenB08_tr);
+#elif defined (__Use_Font_u8g2_font_ncenB14_tr__)
+  lcd.setFont(u8g2_font_ncenB14_tr);
+#elif defined (__Use_Font_u8g2_font_unifont_t_symbols__)
+  lcd.setFont(u8g2_font_unifont_t_symbols);  //  tranparent font  ? Has omega
+#elif defined (__Use_Font_u8g2_font_pxplusibmvga8_m_all__)
+  lcd.setFont(u8g2_font_pxplusibmvga8_m_all);
+#endif
   lcd.setFontMode(0);  // non transparent font mode
+  lcd.setBitmapMode(0);  // non transparent bitmap mode (should not be needed as this is default)
+  lcd.enableUTF8Print();  // non transparent bitmap mode (should not be needed as this is default)
 
 //  lcd.setFontRefHeightExtendedText();
-//  lcd.setDrawColor(1);
+  lcd.setDrawColor(1);
 //  lcd.setFontPosTop();
 //  lcd.setFontDirection(0);
-// setup hit test
+
 #if defined (__Debug__)
   lcd.clearBuffer();          // clear the internal memory
-  lcd.drawStr(0,10,"Hello setup!");  // write something to the internal memory
+  lcd.drawStr(30,20,"GhettoVaper");  // write something to the internal memory
+//  lcd.drawStr(0,10,"\x2126");  // write something to the internal memory
+//  lcd.drawStr(0,16,(char)176);  // write degree to the internal memory - prints "a"
+//  lcd.drawStr(0,16,"_01234567890123456789_");  // write degree to the internal memory - prints "a"
+//  lcd.drawStr(20,16,char(176));  // write degree to the internal memory - prints "a"
+//  lcd.drawStr(30,16,"\260");  // write degree to the internal memory - prints "a"
+//  lcd.drawGlyph(5, 30, 0x2126);  /* dec 9731/hex 2603 Snowman */ // Works!!
+
+
+//  lcd.drawStr(10,10,char(8486));  // write something to the internal memory - -  prints nothing
+//  lcd.drawStr(20,10,"\x21\x26");  // write something to the internal memory
+//  lcd.drawStr(40,10,"10 \1650");  // write something to the internal memory
+//  lcd.drawStr(40,10,char(\1650));  // write something to the internal memory
+//        lcd.print(" \1650"); // omega symbol in octal (8486 in decimal) 2126 in hex - for U8g2 u8g2_font_unifont_t_symbols
+//        lcd.print(char(8486)); // omega symbol in octal (8486 in decimal) 2126 in hex - for U8g2 u8g2_font_unifont_t_symbols
+//        lcd.print("\x21\x26"); // omega symbol in octal (8486 in decimal) 2126 in hex - for U8g2 u8g2_font_unifont_t_symbols
+//        lcd.print("\x2126"); // omega symbol in octal (8486 in decimal) 2126 in hex - for U8g2 u8g2_font_unifont_t_symbols
+
+//    lcd.setCursor(0,0); //  works!!!
+//    lcd.print(" Ω"); // works!!!!
   lcd.sendBuffer();          // transfer internal memory to the display
-  delay(1000);
+  delay(200);
 #endif
 //end setup hit test
 #else
@@ -487,7 +559,12 @@ button.setPullUpDown(HIGH);  // Pull down button = pull up resistor at input
 
 // Check for unitialised EEPROM
   if (checkOutOfRange())
-    EE_Presets();
+    EE_Presets();         // Reset EEPROM to defaults
+  else {                  // Reset default check questions anyway
+    EEPROM.write(EE_defaultsSureAddress, 0); //Reset back to zero/NO - else you are presents with "Yes" at the next "Are you sure?" - should not be needed
+    EEPROM.write(EE_defaultsAddress, 0);     //Reset back to zero/NO - else you are presented with "Yes" at the next "Reset Defaults?"
+
+  }
 }
 
 void loop() {
@@ -699,8 +776,34 @@ void stateMachine(){
         lcd.print("Coil Resistance:");
         lcd.setCursor(0,1);
         lcd.print(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight);
+#if defined (__Use_1602_LCD__)
 //        lcd.print((char)244); // Ohm symbol (Omega)
         lcd.print(" \364"); // Ohm symbol (Omega) octal (244 in decimal)
+#elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+            lcd.print(" \367"); // omega symbol in octal (247 in decimal)
+#elif defined (__Use_SSD1306_LCD__)
+            lcd.print(" Ω"); // omega symbol in octal (247 in decimal) - for Adafruit SSD1306
+
+//            lcd.print(" \367"); // omega symbol in octal (247 in decimal) - for Adafruit SSD1306
+//        lcd.print(" \1212"); /// omega symbol in octal (650 in decimal) - for U8g2 u8g2_font_6x10_mf
+
+//        lcd.setFont(u8g2_font_10x20_t_greek);
+//        lcd.print(" \1650"); // omega symbol in octal (937 in decimal) - for U8g2 u8g2_font_6x10_mf
+//        lcd.print((char)937); // omega symbol in octal (937 in decimal) - for U8g2 u8g2_font_6x10_mf
+
+//        lcd.setFont(u8g2_font_unifont_t_symbols);
+//        lcd.print(" \1650"); // omega symbol in octal (8486 in decimal) 2126 in hex - for U8g2 u8g2_font_unifont_t_symbols
+//        lcd.print(char(8486)); // omega symbol in octal (8486 in decimal) 2126 in hex - for U8g2 u8g2_font_unifont_t_symbols
+//        lcd.print("\x21\x26"); // omega symbol in octal (8486 in decimal) 2126 in hex - for U8g2 u8g2_font_unifont_t_symbols
+//        lcd.print("\x2126"); // omega symbol in octal (8486 in decimal) 2126 in hex - for U8g2 u8g2_font_unifont_t_symbols
+//        lcd.drawGlyph(50, 28, 0x2126);  /* dec 8486/hex 0x2126 Omega */
+
+//        lcd.setFont(u8g2_font_6x10_mf);
+#elif defined (__Use_1602_LCD__)
+        lcd.print(" \364"); // Ohm symbol (Omega) octal (244 in decimal)
+#else
+        lcd.print(" \364"); // Ohm symbol (Omega) octal (244 in decimal)
+#endif
         button.check();
         if(button.wasClicked())
         {
@@ -780,19 +883,41 @@ void stateMachine(){
           case(kTemperatureUnits_F):
           {
             lcd.print(((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)*1.8) + 32);
-            lcd.print(" \337F"); 
+#if defined (__Use_1602_LCD__)
+            lcd.print(" \337F"); // 0 = Fahrenheit // degree symbol in octal (223 in decimal)
+#elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+            lcd.print(" \367F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
+#elif defined (__Use_SSD1306_LCD__)
+//            lcd.print(" \367F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
+            lcd.print(" \260F"); // 0 = Fahrenheit // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+#elif defined (__Use_1602_LCD__)
+            lcd.print(" \337F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
+#else
+            lcd.print(" \337F"); // 0 = Fahrenheit // degree symbol in octal (223 in decimal)
+#endif
             break;
           }  
           case(kTemperatureUnits_C):
           {
             lcd.print(minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight);
-            lcd.print(" \337C"); // degree symbol (Omega) octal (244 in decimal)
+#if defined (__Use_1602_LCD__)
+            lcd.print(" \337C"); // 1 = Centigrade // degree symbol in octal (223 in decimal)
+#elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+            lcd.print(" \367C"); // 1 = Centigrade // degree symbol in octal (247 in decimal)
+#elif defined (__Use_SSD1306_LCD__)
+//            lcd.print(" \367C"); // 1 = Centigrade // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
+            lcd.print(" \260C"); // 1 = Centigrade // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+#elif defined (__Use_1602_LCD__)
+            lcd.print(" \337C"); // 1 = Centigrade // degree symbol in octal (247 in decimal)
+#else
+            lcd.print(" \337C"); // 1 = Centigrade // degree symbol in octal (223 in decimal)
+#endif
             break;                  
           }
           case(kTemperatureUnits_K):
           {
             lcd.print((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)+273.15);
-            lcd.print(" K"); // degree symbol (Omega) octal (244 in decimal)   
+            lcd.print(" K");     // 2 = Kelvin 
             break;               
           }
         }
@@ -820,12 +945,34 @@ void stateMachine(){
         {
           case(kTemperatureUnits_F):
           {
-            lcd.print(" \337F"); // 0 = Fahrenheit
+#if defined (__Use_1602_LCD__)
+            lcd.print(" \337F"); // 0 = Fahrenheit // degree symbol in octal (223 in decimal)
+#elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+            lcd.print(" \367F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
+#elif defined (__Use_SSD1306_LCD__)
+//            lcd.print(" \367F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
+            lcd.print(" \260F"); // 0 = Fahrenheit // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+#elif defined (__Use_1602_LCD__)
+            lcd.print(" \337F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
+#else
+            lcd.print(" \337F"); // 0 = Fahrenheit // degree symbol in octal (223 in decimal)
+#endif
             break;
           }
           case(kTemperatureUnits_C):
           {
-            lcd.print(" \337C"); // 1 = Centigrade
+#if defined (__Use_1602_LCD__)
+            lcd.print(" \337C"); // 1 = Centigrade // degree symbol in octal (223 in decimal)
+#elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+            lcd.print(" \367C"); // 1 = Centigrade // degree symbol in octal (247 in decimal)
+#elif defined (__Use_SSD1306_LCD__)
+//            lcd.print(" \367C"); // 1 = Centigrade // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
+            lcd.print(" \260C"); // 1 = Centigrade // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+#elif defined (__Use_1602_LCD__)
+            lcd.print(" \337C"); // 1 = Centigrade // degree symbol in octal (247 in decimal)
+#else
+            lcd.print(" \337C"); // 1 = Centigrade // degree symbol in octal (223 in decimal)
+#endif
             break;
           }
           case(kTemperatureUnits_K):
@@ -1008,8 +1155,10 @@ void stateMachine(){
           if (EEPROM.read(EE_defaultsAddress)) {
             state = kSTATE_SURE;
           }
-          else
+          else {
             state++;
+//            EEPROM.write(EE_defaultsAddress, 0);//Reset back to zero/NO - else you are presented with "Yes" at the next "Reset Defaults?" - should not be needed
+          }
         }
         break;
       }
@@ -1081,7 +1230,8 @@ void stateMachine(){
           }
           else
           {
-            EEPROM.write(EE_defaultsSureAddress, 0); //Reset back to zero/NO - else you are presents with "Yes" at the next "Are you sure?"
+ //           EEPROM.write(EE_defaultsSureAddress, 0); //Reset back to zero/NO - else you are presents with "Yes" at the next "Are you sure?" - should not be needed
+            EEPROM.write(EE_defaultsAddress, 0);     //Reset back to zero/NO - else you are presented with "Yes" at the next "Reset Defaults?"
           }
           buttonWasHeld();
           state = 0;  // go back to state 0
@@ -1439,6 +1589,9 @@ void speedRead4(){
           lcd.setCursor(kLCDWidth/2-strlen(allWords[kLCDHeight-1])/2,kLCDHeight-1);
           lcd.print(allWords[kLCDHeight-1]);
       }
+#if defined (__Use_SSD1306_LCD__)
+      lcd.sendBuffer();          // transfer internal memory to the display
+#endif
       if (allWords[kLCDHeight-1][i-1] == '.'  || allWords[kLCDHeight-1][i-1] == ',')
         delay(2500);
       else
@@ -1446,9 +1599,6 @@ void speedRead4(){
       for (int n=1; n<kLCDHeight;n++) 
         strcpy(allWords[n-1], allWords[n]);
       firstScreen=false;
-#if defined (__Use_SSD1306_LCD__)
-    lcd.sendBuffer();          // transfer internal memory to the display
-#endif
     }
   }
 #if defined (__Use_SSD1306_LCD__)
