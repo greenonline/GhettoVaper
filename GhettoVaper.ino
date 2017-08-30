@@ -76,6 +76,8 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 #include <EEPROM.h>
 #include <avr/pgmspace.h>
 
+// Use config file instead of this:
+/*
 // ******************** DEFINES - START ********************
 // Test
 //#define __Debug__ // This should normally be commented out
@@ -123,6 +125,8 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 #define __Use_Star_wars__
 
 // ******************** DEFINES - END **********************
+*/
+#include "config.h"
 
 #if defined (__Use_MMButton__)
 #include "MMButton.h"
@@ -217,7 +221,7 @@ const int lcd_backlight            = 2;
 
 #if defined (__Use_DFRobot_1602_LCD__)
 const int secondButton             = 12;  // For DR Robot 16x02 display
-const int batteryPin               = A3;  // For DR Robot 16x02 display
+const int batteryPin               = A3;  // For DR Robot 16x02 display - Originally A0, but DR Robot uses A0 to return key presses
 const int kLCDWidth                = 16;  // Width in characters
 const int kLCDHeight               = 2;   // Height in characters
 #elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
@@ -228,7 +232,7 @@ const int kLCDHeight               = 14;  // Height in characters
 #elif defined (__Use_SSD1306_LCD__)
 const int secondButton             = 12;   // For SSD1306 128x32 0.91" // For testing in conjuction with DFRobot shield, use same second button
 //const int secondButton             = 6;   // For SSD1306 128x32 0.91"
-const int batteryPin               = A0;  // Original
+const int batteryPin               = A3;  // Originally A0
 #if defined (__Use_Font_u8g2_font_6x10_tf__) || defined (__Use_Font_u8g2_font_6x10_mf__)
 const int kLCDWidth                = 20;  // Width in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
 const int kLCDHeight               = 3;  // Height in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
@@ -296,6 +300,8 @@ const int kMaterial_NiFe30         = 7;
 const int kMaterial_Kanthal_A1     = 8;
 const int kMaterial_Kanthal_A      = 9;
 
+const int kNumMaterials            = 10; 
+
 // Coil Materials TCR
 const float kCoeff_SS304           = 0.00105;
 const float kCoeff_SS316           = 0.00094;
@@ -308,7 +314,7 @@ const float kCoeff_NiFe30          = 0.0032;
 const float kCoeff_Kanthal_A1      = 0.000002;  // A1/APM
 const float kCoeff_Kanthal_A       = 0.000053;  // A/AE/AF/D
 
-const int kNumMaterials            = 10;    
+   
 
 const float kTCRs[kNumMaterials] = 
 {
@@ -332,10 +338,14 @@ const int kTemperatureUnits_F      = 0;
 const int kTemperatureUnits_C      = 1; 
 const int kTemperatureUnits_K      = 2; 
 
+const int kNumTemperatureUnits     = 3;    
+
 // Control Tyoe
 const int kVoltageControl          = 0; 
 const int kPowerControl            = 1; 
 const int kTemperatureControl      = 2; 
+
+const int kNumControlTypes         = 3;    
 
 // Program Modes
 const int kPM_Juice                = 0;
@@ -345,6 +355,18 @@ const int kPM_Diag_VoltRead        = 3;
 const int kPM_Diag_BatVoltRead_EE  = 4;
 const int kPM_Diag_FETVoltRead_EE  = 5;
 const int kPM_Diag_CurVoltRead_EE  = 6;
+
+const int kNumProgramModes         = 7;    
+
+// Diagnostic - Voltage Drop Program Modes
+const int kVDPM_Header             = 0;
+const int kVDPM_Batt               = 1;
+const int kVDPM_FET                = 2;
+const int kVDPM_Coil               = 3;
+const int kVDPM_CoilPower          = 4;
+const int kVDPM_CurrentReadVoltage = 5;
+
+const int kNumVDPModes             = 6;    
 
 #if defined (__Use_Star_wars__)
 const char speedMessage[] = {"It is a period of civil war. Rebel spaceships, striking from a hidden base, have won their first victory against the evil Galactic Empire.\
@@ -373,6 +395,7 @@ const int EE_currentMeasureAddress      = 28;
 //const int EE_voltage4PowerAddress       = 30;
 //const int EE_voltage4TemperatureAddress = 32;
 
+// Units min, max and steps
 const float minResistance = 0.0;
 const float maxResistance = 2.0;
 const int   numResistanceSteps = 20;
@@ -384,19 +407,21 @@ const float stepPowerWeight = (maxPower - minPower)/numPowerSteps;
 const float minTemperature = 0.0;
 const float maxTemperature = 500.0;
 const int   numTemperatureSteps = 50;
-const int   numTemperatureUnitsSteps = 3;  // °C, °F and K
+const int   numTemperatureUnitsSteps = kNumTemperatureUnits;  // °C, °F and K
 const float stepTemperatureWeight = (maxTemperature - minTemperature)/numTemperatureSteps; 
 const float minVoltage = 1.0;
 const float maxVoltage = 4.2;
 const int   numVoltageSteps = 20;
 const float stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;
+
 // Progs are the number of sub settings for a particular function (or State)
-const int   numProgs = 7;      // Used to cycle (wrap around) Progs
-const int   numVoltageDropProgs = 5;      // Used to cycle (wrap around) VoltageDropProgs
+// Some of these constants could be redundant (use kNum... instead of num...)
+const int   numProgs = kNumProgramModes;      // Used to cycle (wrap around) Vaping display programs
+const int   numVoltageDropProgs = kNumVDPModes;      // Used to cycle (wrap around) VoltageDropProgs
 const int   numMaterialProgs = kNumMaterials;      // Used to cycle (wrap around) MaterialProgs
-const int   numDefaultsSteps = 2;
-const int   numDefaultsSureSteps = 2;
-const int   numControlTypeSteps = 3;
+const int   numDefaultsSteps = 2;                // yes and no - Reset defaults?
+const int   numDefaultsSureSteps = 2;            // yes and no - Are you sure?
+const int   numControlTypeSteps = kNumControlTypes;  //  voltage, power, temperature
 
 const int interval = 100;
 
@@ -495,7 +520,7 @@ button.setPullUpDown(HIGH);  // Pull down button = pull up resistor at input
   lcd.setFont(u8g2_font_unifont_t_symbols);  //  tranparent font  ? Has omega
 #elif defined (__Use_Font_u8g2_font_pxplusibmvga8_m_all__)
   lcd.setFont(u8g2_font_pxplusibmvga8_m_all);
-#endif
+#endif // fonts
   lcd.setFontMode(0);  // non transparent font mode
   lcd.setBitmapMode(0);  // non transparent bitmap mode (should not be needed as this is default)
   lcd.enableUTF8Print();  // non transparent bitmap mode (should not be needed as this is default)
@@ -505,7 +530,7 @@ button.setPullUpDown(HIGH);  // Pull down button = pull up resistor at input
 //  lcd.setFontPosTop();
 //  lcd.setFontDirection(0);
 
-#if defined (__Debug__)
+#if defined (__Debug__)  // End Debug - Hello Message
   lcd.clearBuffer();          // clear the internal memory
   lcd.drawStr(30,20,"GhettoVaper");  // write something to the internal memory
 //  lcd.drawStr(0,10,"\x2126");  // write something to the internal memory
@@ -529,9 +554,10 @@ button.setPullUpDown(HIGH);  // Pull down button = pull up resistor at input
 //    lcd.print(" Ω"); // works!!!!
   lcd.sendBuffer();          // transfer internal memory to the display
   delay(200);
-#endif
+#endif // End Debug - Hello Message
 //end setup hit test
-#else
+
+#else // we are using a 1602 LCD display and we can configure that and define custom characters
   // set up the LCD's number of rows and columns: 
   lcd.begin(16, 2);
   // Turn on the backlight
@@ -573,9 +599,9 @@ void loop() {
 #if defined (__S2_To_HIGH__)
   // For push S2 to HIGH
   if(digitalRead(secondButton)) {      // if S2 is held
-#elif defined (__MULTI_PUSH_S2__)
+#elif defined (__MULTI_PUSH_S2__)      // not yet written
   // For multi-push S2
-  if(!digitalRead(secondButton)) {   // if S2 is clicked five times
+  if(!digitalRead(secondButton)) {    // if S2 is clicked five times
 #else
   // For push S2 to LOW - default, as original
   if(!digitalRead(secondButton)) {   // if S2 is held
@@ -717,9 +743,9 @@ void stateMachine(){
         button.check();
         if(button.wasHeld())
         {
-          buttonWasHeld();
 //          state = 1;
           state++;
+          buttonWasHeld();
         }
         break;
       }
@@ -739,9 +765,9 @@ void stateMachine(){
         }
         if(button.wasHeld())
         {
-          buttonWasHeld();
 //          state = 2;
           state++;
+          buttonWasHeld();
         }
         break;
       }
@@ -764,9 +790,9 @@ void stateMachine(){
         }
         if(button.wasHeld())
         {
-          buttonWasHeld();
 //          state = 3;
           state++;
+          buttonWasHeld();
         }
         break;
       }
@@ -813,9 +839,9 @@ void stateMachine(){
         }
         if(button.wasHeld())
         {
-          buttonWasHeld();
 //          state = 4;
           state++;
+          buttonWasHeld();
         }
         break;
       }
@@ -867,9 +893,9 @@ void stateMachine(){
         }
         if(button.wasHeld())
         {
-          buttonWasHeld();
 //          state = 5;
           state++;
+          buttonWasHeld();
         }
         break;
       }
@@ -930,9 +956,9 @@ void stateMachine(){
         }
         if(button.wasHeld())
         {
-          buttonWasHeld();
 //          state = 4;
           state++;
+          buttonWasHeld();
         }
         break;
       }
@@ -980,7 +1006,6 @@ void stateMachine(){
           {
             lcd.print(" K");     // 2 = Kelvin    
             break;
-                          
           }
         }
         button.check();
@@ -991,19 +1016,30 @@ void stateMachine(){
         }
         if(button.wasHeld())
         {
-          buttonWasHeld();
-        
 //          state = 4;
           state++;
+          buttonWasHeld();
         }
         break;
       }
 
+// This does not make much sense - It does not display whilst vaping, only displays the values measured during the last vape
+// Would be better to not use EE_programVoltageDropAddress, but alway start at case variable == 0, display "Diagnostics", then 
+// - subsequent clicks cycle through the values
+// - hold, resets case variable to 0
       case(kSTATE_VOLTAGEDROP):  // show coil voltage drop and power
       {
         // Use state machine to show:
         switch(EEPROM.read(EE_programVoltageDropAddress)){
-          case(0):
+          case(kVDPM_Header):
+          {
+        //   Print Battery Voltage when vaping
+            lcd.setCursor(0,0);
+            lcd.print("Diagnostics:");
+            break;
+          }
+          
+          case(kVDPM_Batt):
           {
         //   Print Battery Voltage when vaping
             lcd.setCursor(0,0);
@@ -1014,35 +1050,35 @@ void stateMachine(){
             break;
           }
           
-          case(1):
+          case(kVDPM_FET):
           {
             //   Print Voltage below coil
             lcd.setCursor(0,0);
-            lcd.print("FET Voltage:");
+            lcd.print("FET Voltage:    ");
             lcd.setCursor(0,1);
             lcd.print(EEPROM.read(EE_coilVoltageDropAddress)*5.2/1024);
             lcd.print(" V");
             break;
           }
           
-          case(2):
+          case(kVDPM_Coil):
           {
             //   Print  Voltage Drop across coil
             lcd.setCursor(0,0);
-            lcd.print("Coil Voltage:");
+            lcd.print("Coil Voltage:   ");
             lcd.setCursor(0,1);
             lcd.print((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024);
             lcd.print(" V");
             break;
           }
           
-          case(3):
+          case(kVDPM_CoilPower):
           {
             //   Print power through coil
             int batteryVoltageDrop = EEPROM.read(EE_batteryVoltageDropAddress);
             int coilVoltageDrop = EEPROM.read(EE_coilVoltageDropAddress);
             lcd.setCursor(0,0);
-            lcd.print("Coil Power:");
+            lcd.print("Coil Power:     ");
             lcd.setCursor(0,1);
 //            lcd.print((((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024)*((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024))/(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight));
             lcd.print((((batteryVoltageDrop-coilVoltageDrop)*5.2/1024)*((batteryVoltageDrop-coilVoltageDrop)*5.2/1024))/(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight)); // slightly faster
@@ -1050,11 +1086,11 @@ void stateMachine(){
             break;
           }
           
-          case(4):
+          case(kVDPM_CurrentReadVoltage):
           {
             //   Print voltage at current measuring resistance
             lcd.setCursor(0,0);
-            lcd.print("Current Volt:");
+            lcd.print("Current Voltage:");
             lcd.setCursor(0,1);
             lcd.print(EEPROM.read(EE_currentMeasureAddress)*5.2/1024);
             lcd.print(" V");
@@ -1069,9 +1105,10 @@ void stateMachine(){
         }
         if(button.wasHeld())
         {
+          EEPROM.write(EE_programVoltageDropAddress, 0); // set back to header
+          state++;
           buttonWasHeld();
 //         state = 6;
-          state++;
         }
         break;
       }
@@ -1080,7 +1117,7 @@ void stateMachine(){
       {
 //        lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("LCD Program:");
+        lcd.print("Vaping Display:");
         lcd.setCursor(0,1);
         switch(EEPROM.read(EE_programAddress)){
           case(kPM_Juice):
@@ -1114,9 +1151,9 @@ void stateMachine(){
         }
         if(button.wasHeld())
         {
+          state++;
           buttonWasHeld();
 //          state = 7;
-          state++;
         }
         break;
       }
@@ -1129,8 +1166,8 @@ void stateMachine(){
         button.check();
         if(button.wasHeld())
         {
-          buttonWasHeld();
           state++;;
+          buttonWasHeld();
         }
         break;
       }
@@ -1152,7 +1189,6 @@ void stateMachine(){
           EEPROM.write(EE_defaultsAddress, (EEPROM.read(EE_defaultsAddress)+1)%numDefaultsSteps);
         }
         if(button.wasHeld()) {
-          buttonWasHeld();
           if (EEPROM.read(EE_defaultsAddress)) {
             state = kSTATE_SURE;
           }
@@ -1160,6 +1196,7 @@ void stateMachine(){
             state++;
 //            EEPROM.write(EE_defaultsAddress, 0);//Reset back to zero/NO - else you are presented with "Yes" at the next "Reset Defaults?" - should not be needed
           }
+          buttonWasHeld();
         }
         break;
       }
@@ -1185,8 +1222,7 @@ void stateMachine(){
           case(kTemperatureControl):
           {
             lcd.print("Temperature");     // 2 = Kelvin    
-            break;
-                          
+            break;                          
           }
         }
         button.check();
@@ -1198,8 +1234,8 @@ void stateMachine(){
         if(button.wasHeld())
         {
 //          state = 4;
-          buttonWasHeld();
           state++;
+          buttonWasHeld();
         }
         break;
       }
@@ -1234,15 +1270,14 @@ void stateMachine(){
  //           EEPROM.write(EE_defaultsSureAddress, 0); //Reset back to zero/NO - else you are presents with "Yes" at the next "Are you sure?" - should not be needed
             EEPROM.write(EE_defaultsAddress, 0);     //Reset back to zero/NO - else you are presented with "Yes" at the next "Reset Defaults?"
           }
-          buttonWasHeld();
           state = 0;  // go back to state 0
-          
+          buttonWasHeld();
         }
         break;
       }
     }
 
-    if (state >= kNumStates && state < 99) {
+    if (state >= kNumStates && state < 99) {   // Sanity Check
       state= 0;
     }
 
@@ -1251,14 +1286,20 @@ void stateMachine(){
 }
 
 void buttonWasClicked(){
-//  lcd.clear();  //causes flashing
+//  lcd.clear();  //causes flashing, when changing settings, only need to change the value on the lower line, not the title on the top line as well
 
+/*  
   lcd.setCursor(0,1);
-  for (int n=0;n<kLCDWidth;n++)
-    lcd.print(" ");
-//  lcd.print("                ");
+  for (int n=0;n<kLCDWidth;n++)  // this is very slow
+    lcd.print(" ");              // this is very slow
+//  lcd.print("                ");  // can not do this, maybe screen is wider than 16
+*/
 
-  
+  if (state==kSTATE_VOLTAGEDROP){ // for the diagnostic state...
+    lcd.clear();                  // ...just clear whole screen
+  } else {                        // for all other settings screens...
+    clearLCDSecondLine();         // ...clear only bottom line
+  }
 //#if defined (__Use_SSD1306_LCD__)
 //    lcd.sendBuffer();          // transfer internal memory to the display
 //#else
@@ -1273,6 +1314,43 @@ void buttonWasHeld(){
 //#else
 //  lcd.clear();
 //#endif
+}
+
+void clearLCDSecondLine(){
+//#define __Useclearfor__
+//#define __UseStrCopyBlanks__ 
+#define __UseStrCopyBlanks2__ 
+//#define __UseBlankLine__ 
+
+#if defined (__Useclearfor__)
+  lcd.setCursor(0,1);
+  for (int n=0;n<kLCDWidth;n++)  // this is very slow
+    lcd.print(" ");              // this is very slow
+
+#elif defined (__UseStrCopyBlanks__)
+  lcd.setCursor(0,1);
+  char my_str[] = "                                                  ";
+
+  char tmpString[kLCDWidth];
+  strcpy (tmpString, my_str);
+  tmpString[kLCDWidth] = '\0';
+  lcd.print(tmpString);  
+
+  my_str[kLCDWidth] = '\0';
+  lcd.print(my_str);  
+
+#elif defined (__UseStrCopyBlanks2__)  // quicker than for loop
+  lcd.setCursor(0,1);
+  char my_str[] = "                                                  ";
+
+  my_str[kLCDWidth] = '\0';
+  lcd.print(my_str);  
+
+#elif defined (__UseBlankLine__)
+  lcd.setCursor(0,1);
+  lcd.print("                ");  // can not do this, maybe screen is wider than 16
+
+#endif
 }
 
 void displayProgram() {
@@ -1343,7 +1421,11 @@ void displayProgram() {
     {
       if (millis()-lastMillis>1000){
         lastMillis=millis();
-//        lcd.clear();
+#if defined (__Use_SSD1306_LCD__)
+        lcd.setPrintMode(false);    // disable individual print
+#else
+        lcd.clear();
+#endif
         lcd.setCursor(0,0);
         lcd.print("BAT     ");
         lcd.setCursor(4,0);
@@ -1360,6 +1442,10 @@ void displayProgram() {
         lcd.print(analogRead(coilVoltageDropPin)*5.2/1024);
         lcd.setCursor(14,1);
         lcd.print("V");
+#if defined (__Use_SSD1306_LCD__)
+        lcd.sendBuffer();          // transfer internal memory to the display
+        lcd.setPrintMode(true);    // re-enable individual print
+#endif
       }
       break;
     }
@@ -1369,7 +1455,11 @@ void displayProgram() {
     {
       if (millis()-lastMillis>1000){
         lastMillis=millis();
-//        lcd.clear();
+#if defined (__Use_SSD1306_LCD__)
+        lcd.setPrintMode(false);    // disable individual print
+#else
+        lcd.clear();
+#endif
         lcd.setCursor(0,0);
         lcd.print("BAT     ");
         lcd.setCursor(4,0);
@@ -1386,6 +1476,10 @@ void displayProgram() {
         lcd.print(EEPROM.read(EE_batteryVoltageDropAddress)*5.2/1024);
         lcd.setCursor(14,1);
         lcd.print("V");
+#if defined (__Use_SSD1306_LCD__)
+        lcd.sendBuffer();          // transfer internal memory to the display
+        lcd.setPrintMode(true);    // re-enable individual print
+#endif
       }
       break;
     }
@@ -1395,7 +1489,11 @@ void displayProgram() {
     {
       if (millis()-lastMillis>1000){
         lastMillis=millis();
-//        lcd.clear();
+#if defined (__Use_SSD1306_LCD__)
+        lcd.setPrintMode(false);    // disable individual print
+#else
+        lcd.clear();
+#endif
         lcd.setCursor(0,0);
         lcd.print("FET     ");
         lcd.setCursor(4,0);
@@ -1412,6 +1510,10 @@ void displayProgram() {
         lcd.print(EEPROM.read(EE_coilVoltageDropAddress)*5.2/1024);
         lcd.setCursor(14,1);
         lcd.print("V");
+#if defined (__Use_SSD1306_LCD__)
+        lcd.sendBuffer();          // transfer internal memory to the display
+        lcd.setPrintMode(true);    // re-enable individual print
+#endif
       }
       break;
     }
@@ -1421,7 +1523,11 @@ void displayProgram() {
     {
       if (millis()-lastMillis>1000){
         lastMillis=millis();
-//        lcd.clear();
+#if defined (__Use_SSD1306_LCD__)
+        lcd.setPrintMode(false);    // disable individual print
+#else
+        lcd.clear();
+#endif
         lcd.setCursor(0,0);
         lcd.print("CUR     ");
         lcd.setCursor(4,0);
@@ -1438,6 +1544,10 @@ void displayProgram() {
         lcd.print(EEPROM.read(EE_currentMeasureAddress)*5.2/1024);
         lcd.setCursor(14,1);
         lcd.print("V");
+#if defined (__Use_SSD1306_LCD__)
+        lcd.sendBuffer();          // transfer internal memory to the display
+        lcd.setPrintMode(true);    // re-enable individual print
+#endif
       }
       break;
     }
@@ -1573,6 +1683,8 @@ void speedRead3(){
   }
 }
 
+
+//Speed read4 does not return to the coil control, stays in loop, until the whole message is finished, same as juice used to do
 // quicker? Blank only the number of previous word
 void speedRead4(){
   int i;
