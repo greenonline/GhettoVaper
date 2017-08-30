@@ -270,8 +270,8 @@ const float kCurrentMeasureR       = 0.5;  //Ohms - Resistance of current measur
 const float kRoomTemperature       = 23.0;
 
 // State Engine states
-const int kSTATE_BAT               = 0;
-const int kSTATE_COIL              = 1;
+const int kSTATE_BATTERY_VOLTAGE   = 0;
+const int kSTATE_COIL_VOLTAGE      = 1;
 const int kSTATE_POWER             = 2;
 const int kSTATE_RESISTANCE        = 3;
 const int kSTATE_MATERIAL          = 4;
@@ -404,15 +404,17 @@ const float minPower = 0.0;
 const float maxPower = 70.0;
 const int   numPowerSteps = 70;
 const float stepPowerWeight = (maxPower - minPower)/numPowerSteps; 
-const float minTemperature = 0.0;
-const float maxTemperature = 500.0;
-const int   numTemperatureSteps = 50;
-const int   numTemperatureUnitsSteps = kNumTemperatureUnits;  // °C, °F and K
+const float minTemperature = 150.0;
+const float maxTemperature = 315.0;
+const int   numTemperatureSteps = 33;
 const float stepTemperatureWeight = (maxTemperature - minTemperature)/numTemperatureSteps; 
+const int   numTemperatureUnitsSteps = kNumTemperatureUnits;  // °C, °F and K
 const float minVoltage = 1.0;
 const float maxVoltage = 4.2;
-const int   numVoltageSteps = 20;
-const float stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;
+//const float incVoltage = 0.1;                                         // results in non-rounded increment
+//const int   numVoltageSteps = (maxVoltage-minVoltage)/incVoltage;     // results in non-rounded increment
+const int   numVoltageSteps = 32; // (maxVoltage-minVoltage)/incVoltage;    // was 20;
+const float stepVoltageWeight = (maxVoltage - minVoltage)/numVoltageSteps;  // this should equal the incVoltage
 
 // Progs are the number of sub settings for a particular function (or State)
 // Some of these constants could be redundant (use kNum... instead of num...)
@@ -523,7 +525,7 @@ button.setPullUpDown(HIGH);  // Pull down button = pull up resistor at input
 #endif // fonts
   lcd.setFontMode(0);  // non transparent font mode
   lcd.setBitmapMode(0);  // non transparent bitmap mode (should not be needed as this is default)
-  lcd.enableUTF8Print();  // non transparent bitmap mode (should not be needed as this is default)
+//  lcd.enableUTF8Print();  // non transparent bitmap mode (should not be needed as this is default)
 
 //  lcd.setFontRefHeightExtendedText();
   lcd.setDrawColor(1);
@@ -733,7 +735,7 @@ void stateMachine(){
   while(true){
     switch(state) 
     {
-      case(kSTATE_BAT):  // show battery voltage
+      case(kSTATE_BATTERY_VOLTAGE):  // show battery voltage
       {
         lcd.setCursor(0,0);
         lcd.print("Battery Voltage:");
@@ -750,7 +752,7 @@ void stateMachine(){
         break;
       }
 
-      case(kSTATE_COIL):  // adjust coil voltage
+      case(kSTATE_COIL_VOLTAGE):  // adjust coil voltage
       {
         lcd.setCursor(0,0);
         lcd.print("Coil Voltage:");
@@ -807,9 +809,9 @@ void stateMachine(){
 //        lcd.print((char)244); // Ohm symbol (Omega)
         lcd.print(" \364"); // Ohm symbol (Omega) octal (244 in decimal)
 #elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
-            lcd.print(" \367"); // omega symbol in octal (247 in decimal)
+        lcd.print(" \351"); // omega symbol in octal (0xE9, 233 in decimal) - for GFX
 #elif defined (__Use_SSD1306_LCD__)
-            lcd.print(" Ω"); // omega symbol in octal (247 in decimal) - for Adafruit SSD1306
+        lcd.print(" Ω"); // omega symbol in octal (247 in decimal) - for Adafruit SSD1306
 
 //            lcd.print(" \367"); // omega symbol in octal (247 in decimal) - for Adafruit SSD1306
 //        lcd.print(" \1212"); /// omega symbol in octal (650 in decimal) - for U8g2 u8g2_font_6x10_mf
@@ -1416,7 +1418,7 @@ void displayProgram() {
       break;
     }
     
-    // Display the ADC and voltages of the battery and FET
+    // Display the ADC values and voltages of the battery and FET
     case(kPM_Diag_VoltRead):
     {
       if (millis()-lastMillis>1000){
@@ -1429,7 +1431,8 @@ void displayProgram() {
         lcd.setCursor(0,0);
         lcd.print("BAT     ");
         lcd.setCursor(4,0);
-        lcd.print(analogRead(batteryPin));
+//        lcd.print(analogRead(batteryPin));
+        lcd.print(u2s(analogRead(batteryPin),4));
         lcd.setCursor(9,0);
         lcd.print(analogRead(batteryPin)*5.2/1024);
         lcd.setCursor(14,0);
@@ -1437,7 +1440,8 @@ void displayProgram() {
         lcd.setCursor(0,1);
         lcd.print("FET     ");
         lcd.setCursor(4,1);
-        lcd.print(analogRead(coilVoltageDropPin));
+//        lcd.print(analogRead(coilVoltageDropPin));
+        lcd.print(u2s(analogRead(coilVoltageDropPin),4));
         lcd.setCursor(9,1);
         lcd.print(analogRead(coilVoltageDropPin)*5.2/1024);
         lcd.setCursor(14,1);
@@ -1463,7 +1467,8 @@ void displayProgram() {
         lcd.setCursor(0,0);
         lcd.print("BAT     ");
         lcd.setCursor(4,0);
-        lcd.print(analogRead(batteryPin));
+//        lcd.print(analogRead(batteryPin));
+        lcd.print(u2s(analogRead(batteryPin),4));
         lcd.setCursor(9,0);
         lcd.print(analogRead(batteryPin)*5.2/1024);
         lcd.setCursor(14,0);
@@ -1471,7 +1476,8 @@ void displayProgram() {
         lcd.setCursor(0,1);
         lcd.print("EEB     ");
         lcd.setCursor(4,1);
-        lcd.print(EEPROM.read(EE_batteryVoltageDropAddress));
+//        lcd.print(EEPROM.read(EE_batteryVoltageDropAddress));
+        lcd.print(u2s(EEPROM.read(EE_batteryVoltageDropAddress),4));
         lcd.setCursor(9,1);
         lcd.print(EEPROM.read(EE_batteryVoltageDropAddress)*5.2/1024);
         lcd.setCursor(14,1);
@@ -1497,7 +1503,8 @@ void displayProgram() {
         lcd.setCursor(0,0);
         lcd.print("FET     ");
         lcd.setCursor(4,0);
-        lcd.print(analogRead(coilVoltageDropPin));
+//        lcd.print(analogRead(coilVoltageDropPin));
+        lcd.print(u2s(analogRead(coilVoltageDropPin),4));
         lcd.setCursor(9,0);
         lcd.print(analogRead(coilVoltageDropPin)*5.2/1024);
         lcd.setCursor(14,0);
@@ -1505,7 +1512,8 @@ void displayProgram() {
         lcd.setCursor(0,1);
         lcd.print("EEF     ");
         lcd.setCursor(4,1);
-        lcd.print(EEPROM.read(EE_coilVoltageDropAddress));
+//        lcd.print(EEPROM.read(EE_coilVoltageDropAddress));
+        lcd.print(u2s(EEPROM.read(EE_coilVoltageDropAddress),4));
         lcd.setCursor(9,1);
         lcd.print(EEPROM.read(EE_coilVoltageDropAddress)*5.2/1024);
         lcd.setCursor(14,1);
@@ -1531,7 +1539,8 @@ void displayProgram() {
         lcd.setCursor(0,0);
         lcd.print("CUR     ");
         lcd.setCursor(4,0);
-        lcd.print(analogRead(currentMeasurePin));
+//        lcd.print(analogRead(currentMeasurePin));
+        lcd.print(u2s(analogRead(currentMeasurePin),4));
         lcd.setCursor(9,0);
         lcd.print(analogRead(currentMeasurePin)*5.2/1024);
         lcd.setCursor(14,0);
@@ -1539,7 +1548,8 @@ void displayProgram() {
         lcd.setCursor(0,1);
         lcd.print("EEC     ");
         lcd.setCursor(4,1);
-        lcd.print(EEPROM.read(EE_currentMeasureAddress));
+//        lcd.print(EEPROM.read(EE_currentMeasureAddress));
+        lcd.print(u2s(EEPROM.read(EE_currentMeasureAddress),4));
         lcd.setCursor(9,1);
         lcd.print(EEPROM.read(EE_currentMeasureAddress)*5.2/1024);
         lcd.setCursor(14,1);
@@ -1806,5 +1816,22 @@ void EE_Presets_Test(){
 //  EEPROM.write(EE_currentMeasureAddress, 0);       // default to 0 - no current flow
 //  EEPROM.write(EE_voltage4PowerAddress, 0);        // default to 0 for safety - this is set when the power control option is selected, or power is adjusted
 //  EEPROM.write(EE_voltage4TemperatureAddress, 0);  // default to 0 for safety - this is set when the temperature control option is selected, or temperature is adjusted
+}
+
+/*============================================================================*/
+/* Convert unsigned value to d-digit integer string in local buffer      */
+/*============================================================================*/
+char *u2s(unsigned  x,unsigned d)
+{  static char b[5];
+   char *p;
+   unsigned digits = 0;
+   unsigned  t = x;
+
+   do ++digits; while (t /= 10);
+   // if (digits > d) d = digits; // uncomment to allow more digits than spec'd
+   *(p = b + d) = '\0';
+   do *--p = x % 10 + '0'; while (x /= 10);
+   while (p != b) *--p = ' ';
+   return b;
 }
 
