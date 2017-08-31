@@ -1461,6 +1461,7 @@ void displayProgram() {
         lastMillis=millis();
 #if defined (__Use_SSD1306_LCD__)
         lcd.setPrintMode(false);    // disable individual print
+#elif defined(__Use_TFT_ILI9163C_Extended_Char_LCD__)
 #else
         lcd.clear();
 #endif
