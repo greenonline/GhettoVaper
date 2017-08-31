@@ -1,6 +1,12 @@
 // ******************** DEFINES - START ********************
+
 // Test
 //#define __Debug__ // This should normally be commented out
+//#define __Debug_Presets__ // This should normally be commented out
+//#define __Debug_State__ // This should normally be commented out
+//#define __Debug_Welcome__ // This should normally be commented out
+
+// Button mechanism
 #define __Use_MMButton__ // Use new version - This should normally be uncommented out (i.e. normally do NOT comment out)
 // MButton is the default - however MButton can only be used with pull down buttons 
 
@@ -8,8 +14,8 @@
 // Select which LCD you are using - 1602 is the default
 // Testing with DFRobot 1602 display (default standard 1602 shield)
 //#define __Use_DFRobot_1602_LCD__
-//#define __Use_TFT_ILI9163C_Extended_Char_LCD__ // for 0.96" colour display
-#define __Use_SSD1306_LCD__  // For SSD1306 128x32 0.91"
+#define __Use_TFT_ILI9163C_Extended_Char_LCD__ // for 0.96" colour display
+//#define __Use_SSD1306_LCD__  // For SSD1306 128x32 0.91"
 //#define __Use_1602_LCD__
 
 // Checks for multiple display compiler defines
