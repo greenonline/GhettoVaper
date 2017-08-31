@@ -1425,6 +1425,8 @@ void displayProgram() {
         lastMillis=millis();
 #if defined (__Use_SSD1306_LCD__)
         lcd.setPrintMode(false);    // disable individual print
+#elif defined(__Use_TFT_ILI9163C_Extended_Char_LCD__)
+//don't clear for 1.44' display
 #else
         lcd.clear();
 #endif
@@ -1462,6 +1464,7 @@ void displayProgram() {
 #if defined (__Use_SSD1306_LCD__)
         lcd.setPrintMode(false);    // disable individual print
 #elif defined(__Use_TFT_ILI9163C_Extended_Char_LCD__)
+//don't clear for 1.44' display
 #else
         lcd.clear();
 #endif
@@ -1498,6 +1501,8 @@ void displayProgram() {
         lastMillis=millis();
 #if defined (__Use_SSD1306_LCD__)
         lcd.setPrintMode(false);    // disable individual print
+#elif defined(__Use_TFT_ILI9163C_Extended_Char_LCD__)
+//don't clear for 1.44' display
 #else
         lcd.clear();
 #endif
@@ -1534,6 +1539,8 @@ void displayProgram() {
         lastMillis=millis();
 #if defined (__Use_SSD1306_LCD__)
         lcd.setPrintMode(false);    // disable individual print
+#elif defined(__Use_TFT_ILI9163C_Extended_Char_LCD__)
+//don't clear for 1.44' display
 #else
         lcd.clear();
 #endif
