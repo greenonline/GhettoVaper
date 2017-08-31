@@ -743,10 +743,10 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_BATTERY_VOLTAGE):  // show battery voltage
       {
         lcd.setCursor(0,0);
-        lcd.print("Battery Voltage:");
+        lcd.print(F("Battery Voltage:"));
         lcd.setCursor(0,1);
         lcd.print(analogRead(batteryPin)*5.2/1024);
-        lcd.print(" V          ");
+        lcd.print(F(" V          "));
         button.check();
         if(button.wasHeld())
         {
@@ -760,10 +760,10 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_COIL_VOLTAGE):  // adjust coil voltage
       {
         lcd.setCursor(0,0);
-        lcd.print("Coil Voltage:   ");
+        lcd.print(F("Coil Voltage:   "));
         lcd.setCursor(0,1);
         lcd.print(minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight);
-        lcd.print(" V          ");
+        lcd.print(F(" V          "));
         button.check();
         if(button.wasClicked())
         {
@@ -782,10 +782,10 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_POWER):  // adjust power
       {
         lcd.setCursor(0,0);
-        lcd.print("Power:          ");
+        lcd.print(F("Power:          "));
         lcd.setCursor(0,1);
         lcd.print(minPower + EEPROM.read(EE_powerAddress)*stepPowerWeight);
-        lcd.print(" W         ");
+        lcd.print(F(" W         "));
         button.check();
         if(button.wasClicked())
         {
@@ -807,13 +807,13 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_RESISTANCE):  // adjust coil resistance
       {
         lcd.setCursor(0,0);
-        lcd.print("Coil Resistance:");
+        lcd.print(F("Coil Resistance:"));
         lcd.setCursor(0,1);
         lcd.print(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight);
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
-        lcd.print(" \351          "); // omega symbol in octal (0xE9, 233 in decimal) - for GFX
+        lcd.print(F(" \351          ")); // omega symbol in octal (0xE9, 233 in decimal) - for GFX
 #elif defined (__Use_SSD1306_LCD__)
-        lcd.print(" Ω          "); // omega symbol in octal (247 in decimal) - for Adafruit SSD1306
+        lcd.print(F(" Ω          ")); // omega symbol in octal (247 in decimal) - for Adafruit SSD1306
 
 //            lcd.print(" \367"); // omega symbol in octal (247 in decimal) - for Adafruit SSD1306
 //        lcd.print(" \1212"); /// omega symbol in octal (650 in decimal) - for U8g2 u8g2_font_6x10_mf
@@ -832,9 +832,9 @@ state=kSTATE_TEMPERATURE;
 //        lcd.setFont(u8g2_font_6x10_mf);
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
 //        lcd.print((char)244); // Ohm symbol (Omega)
-        lcd.print(" \364          "); // Ohm symbol (Omega) octal (244 in decimal)
+        lcd.print(F(" \364          ")); // Ohm symbol (Omega) octal (244 in decimal)
 #else
-        lcd.print(" \364          "); // Ohm symbol (Omega) octal (244 in decimal)
+        lcd.print(F(" \364          ")); // Ohm symbol (Omega) octal (244 in decimal)
 #endif
         button.check();
         if(button.wasClicked())
@@ -854,39 +854,39 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_MATERIAL):  // adjust material
       {
         lcd.setCursor(0,0);
-        lcd.print("Coil Material:   ");
+        lcd.print(F("Coil Material:   "));
         lcd.setCursor(0,1);
         switch(EEPROM.read(EE_materialAddress))
         {
           case(kMaterial_SS304):
-            lcd.print("SS 304          ");
+            lcd.print(F("SS 304          "));
             break;
           case(kMaterial_SS316):
-            lcd.print("SS 316          ");
+            lcd.print(F("SS 316          "));
             break;
           case(kMaterial_SS317):
-            lcd.print("SS 317          ");
+            lcd.print(F("SS 317          "));
             break;
           case(kMaterial_SS430):
-            lcd.print("SS 430          ");
+            lcd.print(F("SS 430          "));
             break;
           case(kMaterial_Ni200):
-            lcd.print("Ni200           ");
+            lcd.print(F("Ni200           "));
             break;
           case(kMaterial_Ti):
-            lcd.print("Ti              ");
+            lcd.print(F("Ti              "));
             break;
           case(kMaterial_Tungsten):
-            lcd.print("Tungsten        ");
+            lcd.print(F("Tungsten        "));
             break;
           case(kMaterial_NiFe30):
-            lcd.print("NiFe30          ");
+            lcd.print(F("NiFe30          "));
             break;
           case(kMaterial_Kanthal_A1):
-            lcd.print("Kanthal A/APM   ");
+            lcd.print(F("Kanthal A/APM   "));
             break;
           case(kMaterial_Kanthal_A):
-            lcd.print("Kanthal A/AE+F/D");
+            lcd.print(F("Kanthal A/AE+F/D"));
   // -----------------"                " ----- Measure      
             break;
         }
@@ -909,7 +909,7 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_TEMPERATURE):  // adjust temperature
       {
         lcd.setCursor(0,0);
-        lcd.print("Coil Temperature:");
+        lcd.print(F("Coil Temperature:"));
         lcd.setCursor(0,1);
         switch (EEPROM.read(EE_temperatureUnitsAddress))
         {
@@ -917,14 +917,14 @@ state=kSTATE_TEMPERATURE;
           {
             lcd.print(((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)*1.8) + 32);
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
-            lcd.print(" \367F       "); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
+            lcd.print(F(" \367F       ")); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
 #elif defined (__Use_SSD1306_LCD__)
 //            lcd.print(" \367F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
-            lcd.print(" \260F       "); // 0 = Fahrenheit // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+            lcd.print(F(" \260F       ")); // 0 = Fahrenheit // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
-            lcd.print(" \337F       "); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
+            lcd.print(F(" \337F       ")); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
 #else
-            lcd.print(" \337F       "); // 0 = Fahrenheit // degree symbol in octal (223 in decimal)
+            lcd.print(F(" \337F       ")); // 0 = Fahrenheit // degree symbol in octal (223 in decimal)
 #endif
             break;
           }  
@@ -932,14 +932,14 @@ state=kSTATE_TEMPERATURE;
           {
             lcd.print(minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight);
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
-            lcd.print(" \367C       "); // 1 = Centigrade // degree symbol in octal (247 in decimal)
+            lcd.print(F(" \367C       ")); // 1 = Centigrade // degree symbol in octal (247 in decimal)
 #elif defined (__Use_SSD1306_LCD__)
 //            lcd.print(" \367C"); // 1 = Centigrade // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
-            lcd.print(" \260C       "); // 1 = Centigrade // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+            lcd.print(F(" \260C       ")); // 1 = Centigrade // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
-            lcd.print(" \337C       "); // 1 = Centigrade // degree symbol in octal (247 in decimal)
+            lcd.print(F(" \337C       ")); // 1 = Centigrade // degree symbol in octal (247 in decimal)
 #else
-            lcd.print(" \337C       "); // 1 = Centigrade // degree symbol in octal (223 in decimal)
+            lcd.print(F(" \337C       ")); // 1 = Centigrade // degree symbol in octal (223 in decimal)
 #endif
             break;                  
           }
@@ -949,7 +949,7 @@ state=kSTATE_TEMPERATURE;
 //            static char outstr[15];
 //            lcd.print(dtostrf((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)+273.15,6,2,outstr));
             lcd.print((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)+273.15);
-            lcd.print(" K        ");     // 2 = Kelvin 
+            lcd.print(F(" K        "));     // 2 = Kelvin 
             break;               
           }
         }
@@ -971,21 +971,21 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_TEMPERATURE_UNITS):  // adjust temperature units
       {
         lcd.setCursor(0,0);
-        lcd.print("Temperature units:");
+        lcd.print(F("Temperature units:"));
         lcd.setCursor(0,1);
         switch (EEPROM.read(EE_temperatureUnitsAddress))
         {
           case(kTemperatureUnits_F):
           {
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
-            lcd.print(" \367F              "); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
+            lcd.print(F(" \367F              ")); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
 #elif defined (__Use_SSD1306_LCD__)
 //            lcd.print(" \367F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
-            lcd.print(" \260F              "); // 0 = Fahrenheit // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+            lcd.print(F(" \260F              ")); // 0 = Fahrenheit // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
-            lcd.print(" \337F              "); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
+            lcd.print(F(" \337F              ")); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
 #else
-            lcd.print(" \337F              "); // 0 = Fahrenheit // degree symbol in octal (223 in decimal)
+            lcd.print(F(" \337F              ")); // 0 = Fahrenheit // degree symbol in octal (223 in decimal)
 #endif
             break;
           }
@@ -993,20 +993,20 @@ state=kSTATE_TEMPERATURE;
           {
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
   // -----------------"                " ----- Measure      
-            lcd.print(" \367C              "); // 1 = Centigrade // degree symbol in octal (247 in decimal)
+            lcd.print(F(" \367C              ")); // 1 = Centigrade // degree symbol in octal (247 in decimal)
 #elif defined (__Use_SSD1306_LCD__)
 //            lcd.print(" \367C              "); // 1 = Centigrade // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
-            lcd.print(" \260C              "); // 1 = Centigrade // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+            lcd.print(F(" \260C              ")); // 1 = Centigrade // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
-            lcd.print(" \337C              "); // 1 = Centigrade // degree symbol in octal (247 in decimal)
+            lcd.print(F(" \337C              ")); // 1 = Centigrade // degree symbol in octal (247 in decimal)
 #else
-            lcd.print(" \337C              "); // 1 = Centigrade // degree symbol in octal (223 in decimal)
+            lcd.print(F(" \337C              ")); // 1 = Centigrade // degree symbol in octal (223 in decimal)
 #endif
             break;
           }
           case(kTemperatureUnits_K):
           {
-            lcd.print(" K              ");     // 2 = Kelvin    
+            lcd.print(F(" K              "));     // 2 = Kelvin    
             break;
           }
         }
@@ -1038,9 +1038,9 @@ state=kSTATE_TEMPERATURE;
         //   Print Battery Voltage when vaping
             lcd.setCursor(0,0);
   // -----------------"                " ----- Measure      
-            lcd.print("Diagnostics:    ");
+            lcd.print(F("Diagnostics:    "));
             lcd.setCursor(0,1);
-            lcd.print("                ");
+            lcd.print(F("                "));
             break;
           }
           
@@ -1048,10 +1048,10 @@ state=kSTATE_TEMPERATURE;
           {
         //   Print Battery Voltage when vaping
             lcd.setCursor(0,0);
-            lcd.print("Battery Voltage:");
+            lcd.print(F("Battery Voltage:"));
             lcd.setCursor(0,1);
             lcd.print(EEPROM.read(EE_batteryVoltageDropAddress)*5.2/1024);
-            lcd.print(" V");
+            lcd.print(F(" V"));
             break;
           }
           
@@ -1059,10 +1059,10 @@ state=kSTATE_TEMPERATURE;
           {
             //   Print Voltage below coil
             lcd.setCursor(0,0);
-            lcd.print("FET Voltage:    ");
+            lcd.print(F("FET Voltage:    "));
             lcd.setCursor(0,1);
             lcd.print(EEPROM.read(EE_coilVoltageDropAddress)*5.2/1024);
-            lcd.print(" V");
+            lcd.print(F(" V"));
             break;
           }
           
@@ -1070,10 +1070,10 @@ state=kSTATE_TEMPERATURE;
           {
             //   Print  Voltage Drop across coil
             lcd.setCursor(0,0);
-            lcd.print("Coil Voltage:   ");
+            lcd.print(F("Coil Voltage:   "));
             lcd.setCursor(0,1);
             lcd.print((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024);
-            lcd.print(" V");
+            lcd.print(F(" V"));
             break;
           }
           
@@ -1083,11 +1083,11 @@ state=kSTATE_TEMPERATURE;
             int batteryVoltageDrop = EEPROM.read(EE_batteryVoltageDropAddress);
             int coilVoltageDrop = EEPROM.read(EE_coilVoltageDropAddress);
             lcd.setCursor(0,0);
-            lcd.print("Coil Power:     ");
+            lcd.print(F("Coil Power:     "));
             lcd.setCursor(0,1);
 //            lcd.print((((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024)*((EEPROM.read(EE_batteryVoltageDropAddress)-EEPROM.read(EE_coilVoltageDropAddress))*5.2/1024))/(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight));
             lcd.print((((batteryVoltageDrop-coilVoltageDrop)*5.2/1024)*((batteryVoltageDrop-coilVoltageDrop)*5.2/1024))/(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight)); // slightly faster
-            lcd.print(" W");
+            lcd.print(F(" W"));
             break;
           }
           
@@ -1095,10 +1095,10 @@ state=kSTATE_TEMPERATURE;
           {
             //   Print voltage at current measuring resistance
             lcd.setCursor(0,0);
-            lcd.print("Current Voltage:");
+            lcd.print(F("Current Voltage:"));
             lcd.setCursor(0,1);
             lcd.print(EEPROM.read(EE_currentMeasureAddress)*5.2/1024);
-            lcd.print(" V");
+            lcd.print(F(" V"));
             break;
           }
         }
@@ -1123,29 +1123,29 @@ state=kSTATE_TEMPERATURE;
 //        lcd.clear();
         lcd.setCursor(0,0);
   // -------------"                " ----- Measure      
-        lcd.print("Vaping Display: ");
+        lcd.print(F("Vaping Display: "));
         lcd.setCursor(0,1);
         switch(EEPROM.read(EE_programAddress)){
           case(kPM_Juice):
-            lcd.print("JUICE           ");            // Display JUICE in custom characters
+            lcd.print(F("JUICE           "));            // Display JUICE in custom characters
             break;
           case(kPM_Fresh):
-            lcd.print("FRESH           ");            // Display FRESH in custom characters
+            lcd.print(F("FRESH           "));            // Display FRESH in custom characters
             break;
           case(kPM_SpeedRead):             // Display the message
-            lcd.print("SpeedRead       ");
+            lcd.print(F("SpeedRead       "));
             break;
           case(kPM_Diag_VoltRead):         // Display the ADC and voltages of the battery and FET
-            lcd.print("Diag ADC BAT FET");
+            lcd.print(F("Diag ADC BAT FET"));
             break;
           case(kPM_Diag_BatVoltRead_EE):   // Display the voltage and EE storage for battery
-            lcd.print("Diag V EE BATT  ");
+            lcd.print(F("Diag V EE BATT  "));
             break;
           case(kPM_Diag_FETVoltRead_EE):   // Display the voltage and EE storage for the FET
-            lcd.print("Diag V EE FET   ");
+            lcd.print(F("Diag V EE FET   "));
             break;
           case(kPM_Diag_CurVoltRead_EE):   // Display the voltage and EE storage for the current measuring resistance
-            lcd.print("Diag V EE CUR   ");
+            lcd.print(F("Diag V EE CUR   "));
             break;
         }
 
@@ -1168,9 +1168,9 @@ state=kSTATE_TEMPERATURE;
       {
 //        lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("lets roll       ");
+        lcd.print(F("Let's roll!!    "));
         lcd.setCursor(0,1);
-        lcd.print("                ");
+        lcd.print(F("                "));
         button.check();
         if(button.wasHeld())
         {
@@ -1184,12 +1184,12 @@ state=kSTATE_TEMPERATURE;
       {
 //        lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("Reset defaults? ");
+        lcd.print(F("Reset defaults? "));
         lcd.setCursor(0,1);
         if (EEPROM.read(EE_defaultsAddress))
-          lcd.print("YES             "); // 1 = YES
+          lcd.print(F("YES             ")); // 1 = YES
         else
-          lcd.print("NO              "); // 0 = NO
+          lcd.print(F("NO              ")); // 0 = NO
         button.check();
         if(button.wasClicked())
         {
@@ -1213,23 +1213,23 @@ state=kSTATE_TEMPERATURE;
       {
 //       lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("Control by:     ");
+        lcd.print(F("Control by:     "));
         lcd.setCursor(0,1);
         switch (EEPROM.read(EE_controlTypeAddress))
         {
           case(kVoltageControl):
           {
-            lcd.print("Voltage         "); 
+            lcd.print(F("Voltage         ")); 
             break;
           }
           case(kPowerControl):
           {
-            lcd.print("Power           "); // 1 = Centigrade
+            lcd.print(F("Power           ")); // 1 = Centigrade
             break;
           }
           case(kTemperatureControl):
           {
-            lcd.print("Temperature     ");     // 2 = Kelvin    
+            lcd.print(F("Temperature     "));     // 2 = Kelvin    
             break;                          
           }
         }
@@ -1253,12 +1253,12 @@ state=kSTATE_TEMPERATURE;
       {
 //        lcd.clear();
         lcd.setCursor(0,0);
-        lcd.print("Are you sure?   ");
+        lcd.print(F("Are you sure?   "));
         lcd.setCursor(0,1);
         if (EEPROM.read(EE_defaultsSureAddress))
-          lcd.print("YES             "); // 1 = YES
+          lcd.print(F("YES             ")); // 1 = YES
         else
-          lcd.print("NO              "); // 0 = NO
+          lcd.print(F("NO              ")); // 0 = NO
         button.check();
         if(button.wasClicked())
         {
@@ -1269,7 +1269,7 @@ state=kSTATE_TEMPERATURE;
           if (EEPROM.read(EE_defaultsSureAddress)) {
             lcd.clear();
             lcd.setCursor(0,0);
-            lcd.print("Resetting...");
+            lcd.print(F("Resetting..."));
             delay(300);
             EE_Presets();
           }
@@ -1331,7 +1331,7 @@ void buttonWasHeld(){
 //  lcd.clear();
 //#endif
 }
-
+/*
 void clearLCDSecondLine(){
 //#define __Useclearfor__
 //#define __UseStrCopyBlanks__ 
@@ -1368,7 +1368,7 @@ void clearLCDSecondLine(){
 
 #endif
 }
-
+*/
 void displayProgram() {
 
   if (EEPROM.read(EE_programAddress)>=numProgs)  // if numProgs is out of range, on a freshly installed machine (bug fix)
@@ -1393,7 +1393,7 @@ void displayProgram() {
         delay(interval);
 #else
         lcd.setCursor(0,0);
-        lcd.print("JUICE");
+        lcd.print(F("JUICE"));
         delay(interval);
 #endif
         lcd.clear();
@@ -1416,7 +1416,7 @@ void displayProgram() {
         delay(interval);
 #else
         lcd.setCursor(0,0);
-        lcd.print("FRESH");
+        lcd.print(F("FRESH"));
         delay(interval);
 #endif
         lcd.clear(); 
@@ -1445,7 +1445,7 @@ void displayProgram() {
         lcd.clear();
 #endif
         lcd.setCursor(0,0);
-        lcd.print("BAT     ");
+        lcd.print(F("BAT     "));
         lcd.setCursor(4,0);
 //        lcd.print(analogRead(batteryPin));
         lcd.print(u2s(analogRead(batteryPin),4));
@@ -1454,7 +1454,7 @@ void displayProgram() {
         lcd.setCursor(14,0);
         lcd.print("V");
         lcd.setCursor(0,1);
-        lcd.print("FET     ");
+        lcd.print(F("FET     "));
         lcd.setCursor(4,1);
 //        lcd.print(analogRead(coilVoltageDropPin));
         lcd.print(u2s(analogRead(coilVoltageDropPin),4));
@@ -1483,7 +1483,7 @@ void displayProgram() {
         lcd.clear();
 #endif
         lcd.setCursor(0,0);
-        lcd.print("BAT     ");
+        lcd.print(F("BAT     "));
         lcd.setCursor(4,0);
 //        lcd.print(analogRead(batteryPin));
         lcd.print(u2s(analogRead(batteryPin),4));
@@ -1492,7 +1492,7 @@ void displayProgram() {
         lcd.setCursor(14,0);
         lcd.print("V");
         lcd.setCursor(0,1);
-        lcd.print("EEB     ");
+        lcd.print(F("EEB     "));
         lcd.setCursor(4,1);
 //        lcd.print(EEPROM.read(EE_batteryVoltageDropAddress));
         lcd.print(u2s(EEPROM.read(EE_batteryVoltageDropAddress),4));
@@ -1521,7 +1521,7 @@ void displayProgram() {
         lcd.clear();
 #endif
         lcd.setCursor(0,0);
-        lcd.print("FET     ");
+        lcd.print(F("FET     "));
         lcd.setCursor(4,0);
 //        lcd.print(analogRead(coilVoltageDropPin));
         lcd.print(u2s(analogRead(coilVoltageDropPin),4));
@@ -1530,7 +1530,7 @@ void displayProgram() {
         lcd.setCursor(14,0);
         lcd.print("V");
         lcd.setCursor(0,1);
-        lcd.print("EEF     ");
+        lcd.print(F("EEF     "));
         lcd.setCursor(4,1);
 //        lcd.print(EEPROM.read(EE_coilVoltageDropAddress));
         lcd.print(u2s(EEPROM.read(EE_coilVoltageDropAddress),4));
@@ -1559,7 +1559,7 @@ void displayProgram() {
         lcd.clear();
 #endif
         lcd.setCursor(0,0);
-        lcd.print("CUR     ");
+        lcd.print(F("CUR     "));
         lcd.setCursor(4,0);
 //        lcd.print(analogRead(currentMeasurePin));
         lcd.print(u2s(analogRead(currentMeasurePin),4));
@@ -1568,7 +1568,7 @@ void displayProgram() {
         lcd.setCursor(14,0);
         lcd.print("V");
         lcd.setCursor(0,1);
-        lcd.print("EEC     ");
+        lcd.print(F("EEC     "));
         lcd.setCursor(4,1);
 //        lcd.print(EEPROM.read(EE_currentMeasureAddress));
         lcd.print(u2s(EEPROM.read(EE_currentMeasureAddress),4));
@@ -1585,7 +1585,7 @@ void displayProgram() {
     }
   }
 }
-
+/*
 void speedRead(){
   const int kLCDWidth = 16;
   int i;
@@ -1714,7 +1714,7 @@ void speedRead3(){
     }
   }
 }
-
+*/
 
 //Speed read4 does not return to the coil control, stays in loop, until the whole message is finished, same as juice used to do
 // quicker? Blank only the number of previous word
