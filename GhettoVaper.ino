@@ -917,14 +917,14 @@ state=kSTATE_TEMPERATURE;
           {
             lcd.print(((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)*1.8) + 32);
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
-            lcd.print(" \367F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
+            lcd.print(" \367F       "); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
 #elif defined (__Use_SSD1306_LCD__)
 //            lcd.print(" \367F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
-            lcd.print(" \260F"); // 0 = Fahrenheit // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+            lcd.print(" \260F       "); // 0 = Fahrenheit // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
-            lcd.print(" \337F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
+            lcd.print(" \337F       "); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
 #else
-            lcd.print(" \337F"); // 0 = Fahrenheit // degree symbol in octal (223 in decimal)
+            lcd.print(" \337F       "); // 0 = Fahrenheit // degree symbol in octal (223 in decimal)
 #endif
             break;
           }  
@@ -932,14 +932,14 @@ state=kSTATE_TEMPERATURE;
           {
             lcd.print(minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight);
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
-            lcd.print(" \367C"); // 1 = Centigrade // degree symbol in octal (247 in decimal)
+            lcd.print(" \367C       "); // 1 = Centigrade // degree symbol in octal (247 in decimal)
 #elif defined (__Use_SSD1306_LCD__)
 //            lcd.print(" \367C"); // 1 = Centigrade // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
-            lcd.print(" \260C"); // 1 = Centigrade // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+            lcd.print(" \260C       "); // 1 = Centigrade // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
-            lcd.print(" \337C"); // 1 = Centigrade // degree symbol in octal (247 in decimal)
+            lcd.print(" \337C       "); // 1 = Centigrade // degree symbol in octal (247 in decimal)
 #else
-            lcd.print(" \337C"); // 1 = Centigrade // degree symbol in octal (223 in decimal)
+            lcd.print(" \337C       "); // 1 = Centigrade // degree symbol in octal (223 in decimal)
 #endif
             break;                  
           }
@@ -949,7 +949,7 @@ state=kSTATE_TEMPERATURE;
 //            static char outstr[15];
 //            lcd.print(dtostrf((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)+273.15,6,2,outstr));
             lcd.print((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)+273.15);
-            lcd.print(" K");     // 2 = Kelvin 
+            lcd.print(" K        ");     // 2 = Kelvin 
             break;               
           }
         }
