@@ -154,6 +154,14 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 #include <Wire.h>
 //#endif
 //#include <SSD1306_Extended_Char.h>
+#elif defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__)
+#include <SSD1306_OLED_HW_I2C_FULL.h>
+#elif defined (__Use_Small_SSD1306_LCD__)
+#include <Small_SSD1306.h>
+#elif defined (__Use_Small_SSD1306_LCD_Print_8x16__)
+#include <Small_SSD1306_Print_8x16.h>
+#elif defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+#include <Small_SSD1306_Print_8x16_lib.h>
 #elif defined (__Use_1602_LCD__)
 #include "LiquidCrystalFast.h"
 #include "BigCharacters.h"
@@ -253,6 +261,24 @@ const int kLCDHeight               = 2;  // Height in characters, for u8g2_font_
 const int kLCDWidth                = 16;  // Width in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
 const int kLCDHeight               = 3;  // Height in characters, for u8g2_font_6x10_tf and u8g2_font_ncenB08_tr
 #endif
+#elif defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__)
+const int secondButton             = 12;   // For SSD1306 128x32 0.91" // For testing in conjuction with DFRobot shield, use same second button
+//const int secondButton             = 6;   // For SSD1306 128x32 0.91"
+const int batteryPin               = A3;  // Originally A0
+const int kLCDWidth                = 16;
+const int kLCDHeight               = 2;
+#elif defined (__Use_Small_SSD1306_LCD__)
+const int secondButton             = 12;   // For SSD1306 128x32 0.91" // For testing in conjuction with DFRobot shield, use same second button
+//const int secondButton             = 6;   // For SSD1306 128x32 0.91"
+const int batteryPin               = A3;  // Originally A0
+const int kLCDWidth                = 16;
+const int kLCDHeight               = 4;  // With 6x8 characters
+#elif defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+const int secondButton             = 12;   // For SSD1306 128x32 0.91" // For testing in conjuction with DFRobot shield, use same second button
+//const int secondButton             = 6;   // For SSD1306 128x32 0.91"
+const int batteryPin               = A3;  // Originally A0
+const int kLCDWidth                = 16;
+const int kLCDHeight               = 2;  // With 8x16 characters
 #elif defined (__Use_1602_LCD__)
 const int secondButton             = 10;  // Original
 const int batteryPin               = A0;  // Original
@@ -456,6 +482,14 @@ TFT_ILI9163C_Extended_Char lcd = TFT_ILI9163C_Extended_Char(__CS, __DC, __RST);
 //U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C lcd(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
 // My extension
 SSD1306_Extended_Char lcd(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
+#elif defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__)
+SSD1306_OLED_HW_I2C_FULL lcd = SSD1306_OLED_HW_I2C_FULL();
+#elif defined (__Use_Small_SSD1306_LCD__)
+Small_SSD1306 lcd = Small_SSD1306();
+#elif defined (__Use_Small_SSD1306_LCD_Print_8x16__)
+Small_SSD1306_Print_8x16 lcd = Small_SSD1306_Print_8x16();
+#elif defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+Small_SSD1306_Print_8x16_lib lcd = Small_SSD1306_Print_8x16_lib();
 #elif defined (__Use_1602_LCD__)
 LiquidCrystalFast lcd(9,  8,  7,  6,  5, 4, 3);   // Original GhettoVape III wiring
 #else
@@ -559,6 +593,9 @@ button.setPullUpDown(HIGH);  // Pull down button = pull up resistor at input
   delay(200);
 #endif // End Debug - Hello Message
 //end setup hit test
+
+#elif defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__) || defined (__Use_Small_SSD1306_LCD__) || defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+  lcd.begin();
 
 #else // we are using a 1602 LCD display and we can configure that and define custom characters
   // set up the LCD's number of rows and columns: 
@@ -743,6 +780,7 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_BATTERY_VOLTAGE):  // show battery voltage
       {
         lcd.setCursor(0,0);
+        //        --|1234567890123456|--
         lcd.print(F("Battery Voltage:"));
         lcd.setCursor(0,1);
         lcd.print(analogRead(batteryPin)*5.2/1024);
@@ -760,6 +798,7 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_COIL_VOLTAGE):  // adjust coil voltage
       {
         lcd.setCursor(0,0);
+        //        --|1234567890123456|--
         lcd.print(F("Coil Voltage:   "));
         lcd.setCursor(0,1);
         lcd.print(minVoltage + EEPROM.read(EE_voltageAddress)*stepVoltageWeight);
@@ -830,6 +869,9 @@ state=kSTATE_TEMPERATURE;
 //        lcd.drawGlyph(50, 28, 0x2126);  /* dec 8486/hex 0x2126 Omega */
 
 //        lcd.setFont(u8g2_font_6x10_mf);
+#elif defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+//         lcd.print(F(" \141          ")); // omega symbol in octal (0xE9, 97 in decimal) - for SSD1306_OLED_HW_I2C_LIB 8x16
+         lcd.print(F(" \201          ")); // omega symbol in octal (0xE9, 97+32 in decimal) - for SSD1306_OLED_HW_I2C_LIB 8x16
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
 //        lcd.print((char)244); // Ohm symbol (Omega)
         lcd.print(F(" \364          ")); // Ohm symbol (Omega) octal (244 in decimal)
@@ -854,7 +896,8 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_MATERIAL):  // adjust material
       {
         lcd.setCursor(0,0);
-        lcd.print(F("Coil Material:   "));
+        //        --|1234567890123456|-- <----- Measure    
+        lcd.print(F("Coil Material:  "));
         lcd.setCursor(0,1);
         switch(EEPROM.read(EE_materialAddress))
         {
@@ -887,7 +930,8 @@ state=kSTATE_TEMPERATURE;
             break;
           case(kMaterial_Kanthal_A):
             lcd.print(F("Kanthal A/AE+F/D"));
-  // -----------------"                " ----- Measure      
+        //            --|1234567890123456|-- <----- Measure    
+  // -----------------  "                " <----- Measure      
             break;
         }
 
@@ -909,7 +953,12 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_TEMPERATURE):  // adjust temperature
       {
         lcd.setCursor(0,0);
+#if defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+        //        --|1234567890123456|-- <----- Measure    
+        lcd.print(F("Coil Temperature"));
+#else
         lcd.print(F("Coil Temperature:"));
+#endif
         lcd.setCursor(0,1);
         switch (EEPROM.read(EE_temperatureUnitsAddress))
         {
@@ -921,6 +970,9 @@ state=kSTATE_TEMPERATURE;
 #elif defined (__Use_SSD1306_LCD__)
 //            lcd.print(" \367F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
             lcd.print(F(" \260F       ")); // 0 = Fahrenheit // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+#elif defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+//            lcd.print(F(" \140F       ")); // 0 = Fahrenheit // degree symbol in octal (96 in decimal) - for SSD1306_OLED_HW_I2C_LIB 8x16
+            lcd.print(F(" \200F       ")); // 0 = Fahrenheit // degree symbol in octal (128 in decimal (have to add 32 to 96)) - for SSD1306_OLED_HW_I2C_LIB 8x16
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
             lcd.print(F(" \337F       ")); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
 #else
@@ -936,6 +988,9 @@ state=kSTATE_TEMPERATURE;
 #elif defined (__Use_SSD1306_LCD__)
 //            lcd.print(" \367C"); // 1 = Centigrade // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
             lcd.print(F(" \260C       ")); // 1 = Centigrade // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+#elif defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+//            lcd.print(F(" \140C       ")); // 1 = Centigrade // degree symbol in octal (96 in decimal) - for SSD1306_OLED_HW_I2C_LIB 8x16
+            lcd.print(F(" \200C       ")); // 1 = Centigrade // degree symbol in octal (128 in decimal (have to add 32 to 96/) - for SSD1306_OLED_HW_I2C_LIB 8x16
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
             lcd.print(F(" \337C       ")); // 1 = Centigrade // degree symbol in octal (247 in decimal)
 #else
@@ -971,7 +1026,12 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_TEMPERATURE_UNITS):  // adjust temperature units
       {
         lcd.setCursor(0,0);
+#if defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+        //        --|1234567890123456|-- <----- Measure    
+        lcd.print(F("Temperature unit"));
+#else
         lcd.print(F("Temperature units:"));
+#endif
         lcd.setCursor(0,1);
         switch (EEPROM.read(EE_temperatureUnitsAddress))
         {
@@ -982,6 +1042,8 @@ state=kSTATE_TEMPERATURE;
 #elif defined (__Use_SSD1306_LCD__)
 //            lcd.print(" \367F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
             lcd.print(F(" \260F              ")); // 0 = Fahrenheit // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+#elif defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+            lcd.print(F(" \200F       ")); // 0 = Fahrenheit // degree symbol in octal (96+32 in decimal) - for SSD1306_OLED_HW_I2C_LIB 8x16
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
             lcd.print(F(" \337F              ")); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
 #else
@@ -997,6 +1059,8 @@ state=kSTATE_TEMPERATURE;
 #elif defined (__Use_SSD1306_LCD__)
 //            lcd.print(" \367C              "); // 1 = Centigrade // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
             lcd.print(F(" \260C              ")); // 1 = Centigrade // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
+#elif defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+            lcd.print(F(" \200C       ")); // 1 = Centigrade // degree symbol in octal (92+32 in decimal) - for SSD1306_OLED_HW_I2C_LIB 8x16
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
             lcd.print(F(" \337C              ")); // 1 = Centigrade // degree symbol in octal (247 in decimal)
 #else
@@ -1380,7 +1444,7 @@ void displayProgram() {
       //JUICE
 //      do 
 //      {
-#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD__)
+#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD__)  && !defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__)  && !defined (__Use_Small_SSD1306_LCD__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
         customJ(0);    // displays custom 0 on the LCD
         delay(interval);
         customU(4);
@@ -1407,7 +1471,7 @@ void displayProgram() {
     {
 //      do 
 //      {
-#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD__)
+#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD__)  && !defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__)  && !defined (__Use_Small_SSD1306_LCD__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
         customF(0);    // displays custom 0 on the LCD
         customR(3);
         customE(7);
