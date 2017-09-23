@@ -90,18 +90,18 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 // Testing with DFRobot 1602 display (default standard 1602 shield)
 //#define __Use_DFRobot_1602_LCD__
 //#define __Use_TFT_ILI9163C_Extended_Char_LCD__ // for 0.96" colour display
-#define __Use_SSD1306_LCD__  // For SSD1306 128x32 0.91"
+#define __Use_SSD1306_LCD_U8g2__  // For SSD1306 128x32 0.91"
 //#define __Use_1602_LCD__
 
 // Checks for multiple display compiler defines
 #if defined (__Use_DFRobot_1602_LCD__) && defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
 #error Oops!  You have defined both __Use_DFRobot_1602_LCD__ and __Use_TFT_ILI9163C_Extended_Char_LCD__. You can only define one. Which display are you using??
 #endif
-#if defined (__Use_DFRobot_1602_LCD__) && defined (__Use_SSD1306_LCD__)
-#error Oops!  You have defined both __Use_DFRobot_1602_LCD__ and __Use_SSD1306_LCD__. You can only define one. Which display are you using??
+#if defined (__Use_DFRobot_1602_LCD__) && defined (__Use_SSD1306_LCD_U8g2__)
+#error Oops!  You have defined both __Use_DFRobot_1602_LCD__ and __Use_SSD1306_LCD_U8g2__. You can only define one. Which display are you using??
 #endif
-#if defined (__Use_SSD1306_LCD__) && defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
-#error Oops!  You have defined both __Use_SSD1306_LCD__ and __Use_TFT_ILI9163C_Extended_Char_LCD__. You can only define one. Which display are you using??
+#if defined (__Use_SSD1306_LCD_U8g2__) && defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
+#error Oops!  You have defined both __Use_SSD1306_LCD_U8g2__ and __Use_TFT_ILI9163C_Extended_Char_LCD__. You can only define one. Which display are you using??
 #endif
 
 // Switch S2 behaviour
@@ -143,7 +143,7 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 #include <SPI.h>
 #include <Adafruit_GFX.h>
 #include <TFT_ILI9163C_Extended_Char.h>
-#elif defined (__Use_SSD1306_LCD__)
+#elif defined (__Use_SSD1306_LCD_U8g2__)
 #include <Arduino.h>
 //#include <U8g2lib.h>  //not required, we are using SSD1306_Extended_Char
 #include <SSD1306_Extended_Char.h>
@@ -162,6 +162,7 @@ Your Connections from TFT_ILI9163C to an Uno (Through a Level Shifter)
 #include <Small_SSD1306_Print_8x16.h>
 #elif defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
 #include <Small_SSD1306_Print_8x16_lib.h>
+#include "BigCharactersSSD8x16.h"
 #elif defined (__Use_1602_LCD__)
 #include "LiquidCrystalFast.h"
 #include "BigCharacters.h"
@@ -200,7 +201,7 @@ const int kTextSize = 1;
 const int kScreenWidth = 16;
 #elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
 const int kScreenWidth = 20;
-#elif defined (__Use_SSD1306_LCD__)
+#elif defined (__Use_SSD1306_LCD_U8g2__)
 const int kScreenWidth = 20;  //SSD1306???
 #elif defined (__Use_1602_LCD__)
 const int kScreenWidth = 16;
@@ -238,7 +239,7 @@ const int secondButton             = 6;   // For TFT_ILI9163C
 const int batteryPin               = A0;  // Original
 const int kLCDWidth                = 20;  // Width in characters
 const int kLCDHeight               = 14;  // Height in characters
-#elif defined (__Use_SSD1306_LCD__)
+#elif defined (__Use_SSD1306_LCD_U8g2__)
 const int secondButton             = 12;   // For SSD1306 128x32 0.91" // For testing in conjuction with DFRobot shield, use same second button
 //const int secondButton             = 6;   // For SSD1306 128x32 0.91"
 const int batteryPin               = A3;  // Originally A0
@@ -377,13 +378,17 @@ const int kNumControlTypes         = 3;
 // Program Modes
 const int kPM_Juice                = 0;
 const int kPM_Fresh                = 1;
-const int kPM_SpeedRead            = 2;
-const int kPM_Diag_VoltRead        = 3;
-const int kPM_Diag_BatVoltRead_EE  = 4;
-const int kPM_Diag_FETVoltRead_EE  = 5;
-const int kPM_Diag_CurVoltRead_EE  = 6;
+const int kPM_Bad                  = 2;
+const int kPM_Luck                 = 3;
+const int kPM_Pot                  = 4;
+const int kPM_SpeedRead            = 5;
+const int kPM_Diag_VoltRead        = 6;
+const int kPM_Diag_BatVoltRead_EE  = 7;
+const int kPM_Diag_FETVoltRead_EE  = 8;
+const int kPM_Diag_CurVoltRead_EE  = 9;
+const int kPM_Vape_Time            = 10;
 
-const int kNumProgramModes         = 7;    
+const int kNumProgramModes         = 11;    
 
 // Diagnostic - Voltage Drop Program Modes
 const int kVDPM_Header             = 0;
@@ -421,6 +426,7 @@ const int EE_controlTypeAddress         = 26;
 const int EE_currentMeasureAddress      = 28;
 //const int EE_voltage4PowerAddress       = 30;
 //const int EE_voltage4TemperatureAddress = 32;
+const int EE_puffCountAddress           = 34;
 
 // Units min, max and steps
 const float minResistance = 0.0;
@@ -452,7 +458,7 @@ const int   numDefaultsSteps = 2;                // yes and no - Reset defaults?
 const int   numDefaultsSureSteps = 2;            // yes and no - Are you sure?
 const int   numControlTypeSteps = kNumControlTypes;  //  voltage, power, temperature
 
-const int interval = 100;
+const int interval = 100; // flashy interval
 
 // Variables
 
@@ -465,17 +471,19 @@ char thisWord[30];
 char lastWord[30];
 char allWords[kLCDHeight][kLCDWidth];
 int wordLoc;
-long startTime = 0;
+long startTime = 0;   // What for??
 
 // For timing
 unsigned long lastMillis = 0;
+unsigned long startVapeTime = 0;
+boolean firstVapeThisSession = false;
 
 #if defined (__Use_DFRobot_1602_LCD__)
 // initialize the library with the numbers of the interface pins
 LiquidCrystalFast lcd(8, 255,  9,  4,  5,  6, 7);   // For DFRobot 1602 shield
 #elif defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
 TFT_ILI9163C_Extended_Char lcd = TFT_ILI9163C_Extended_Char(__CS, __DC, __RST); 
-#elif defined (__Use_SSD1306_LCD__)
+#elif defined (__Use_SSD1306_LCD_U8g2__)
 // Page Buffer
 //U8G2_SSD1306_128X32_UNIVISION_1_HW_I2C lcd(U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL, /* data=*/ SDA);   // pin remapping with ESP8266 HW I2C
 // Full buffer
@@ -542,7 +550,7 @@ button.setPullUpDown(HIGH);  // Pull down button = pull up resistor at input
   lcd.setTextColor(WHITE, BLACK);  
   lcd.setTextSize(kTextSize);
 //  lcd.fillScreen();
-#elif defined (__Use_SSD1306_LCD__)
+#elif defined (__Use_SSD1306_LCD_U8g2__)
   lcd.begin();
   lcd.enableUTF8Print();          // enable UTF
 #if defined (__Use_Font_u8g2_font_6x10_mf__)
@@ -629,13 +637,14 @@ button.setPullUpDown(HIGH);  // Pull down button = pull up resistor at input
   else {                  // Reset default check questions anyway
     EEPROM.write(EE_defaultsSureAddress, 0); //Reset back to zero/NO - else you are presents with "Yes" at the next "Are you sure?" - should not be needed
     EEPROM.write(EE_defaultsAddress, 0);     //Reset back to zero/NO - else you are presented with "Yes" at the next "Reset Defaults?"
-
   }
+
+// Puff length and counter
+  startVapeTime = millis();
+  firstVapeThisSession = true;
 }
 
 void loop() {
-
-
 #if defined (__S2_To_HIGH__)
   // For push S2 to HIGH
   if(digitalRead(secondButton)) {      // if S2 is held
@@ -760,6 +769,10 @@ void loop() {
 
       analogWrite(fetPin, desiredVoltage);                                                                   // Activate PWM to trigger NFET
     }
+    if (firstVapeThisSession) {
+      EEPROM.write(EE_puffCountAddress, (EEPROM.read(EE_puffCountAddress)+1)); // only counts to 256 puffs
+      firstVapeThisSession = false;
+    }
     displayProgram();
 
   }
@@ -851,7 +864,7 @@ state=kSTATE_TEMPERATURE;
         lcd.print(minResistance + EEPROM.read(EE_resistanceAddress)*stepResistanceWeight);
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
         lcd.print(F(" \351          ")); // omega symbol in octal (0xE9, 233 in decimal) - for GFX
-#elif defined (__Use_SSD1306_LCD__)
+#elif defined (__Use_SSD1306_LCD_U8g2__)
         lcd.print(F(" Ω          ")); // omega symbol in octal (247 in decimal) - for Adafruit SSD1306
 
 //            lcd.print(" \367"); // omega symbol in octal (247 in decimal) - for Adafruit SSD1306
@@ -967,7 +980,7 @@ state=kSTATE_TEMPERATURE;
             lcd.print(((minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight)*1.8) + 32);
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
             lcd.print(F(" \367F       ")); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
-#elif defined (__Use_SSD1306_LCD__)
+#elif defined (__Use_SSD1306_LCD_U8g2__)
 //            lcd.print(" \367F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
             lcd.print(F(" \260F       ")); // 0 = Fahrenheit // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
 #elif defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
@@ -985,7 +998,7 @@ state=kSTATE_TEMPERATURE;
             lcd.print(minTemperature + EEPROM.read(EE_temperatureAddress)*stepTemperatureWeight);
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
             lcd.print(F(" \367C       ")); // 1 = Centigrade // degree symbol in octal (247 in decimal)
-#elif defined (__Use_SSD1306_LCD__)
+#elif defined (__Use_SSD1306_LCD_U8g2__)
 //            lcd.print(" \367C"); // 1 = Centigrade // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
             lcd.print(F(" \260C       ")); // 1 = Centigrade // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
 #elif defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
@@ -1026,7 +1039,7 @@ state=kSTATE_TEMPERATURE;
       case(kSTATE_TEMPERATURE_UNITS):  // adjust temperature units
       {
         lcd.setCursor(0,0);
-#if defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+#if defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)// || defined (__Use_DFRobot_1602_LCD__)
         //        --|1234567890123456|-- <----- Measure    
         lcd.print(F("Temperature unit"));
 #else
@@ -1039,15 +1052,16 @@ state=kSTATE_TEMPERATURE;
           {
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
             lcd.print(F(" \367F              ")); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
-#elif defined (__Use_SSD1306_LCD__)
+#elif defined (__Use_SSD1306_LCD_U8g2__)
 //            lcd.print(" \367F"); // 0 = Fahrenheit // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
             lcd.print(F(" \260F              ")); // 0 = Fahrenheit // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
 #elif defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
             lcd.print(F(" \200F       ")); // 0 = Fahrenheit // degree symbol in octal (96+32 in decimal) - for SSD1306_OLED_HW_I2C_LIB 8x16
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
-            lcd.print(F(" \337F              ")); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
+        //            --|1234567890123456+++|-- <----- Measure    
+            lcd.print(F(" \337F             ")); // 0 = Fahrenheit // degree symbol in octal (247 in decimal)
 #else
-            lcd.print(F(" \337F              ")); // 0 = Fahrenheit // degree symbol in octal (223 in decimal)
+            lcd.print(F(" \337F             ")); // 0 = Fahrenheit // degree symbol in octal (223 in decimal)
 #endif
             break;
           }
@@ -1056,20 +1070,22 @@ state=kSTATE_TEMPERATURE;
 #if defined (__Use_TFT_ILI9163C_Extended_Char_LCD__)
   // -----------------"                " ----- Measure      
             lcd.print(F(" \367C              ")); // 1 = Centigrade // degree symbol in octal (247 in decimal)
-#elif defined (__Use_SSD1306_LCD__)
+#elif defined (__Use_SSD1306_LCD_U8g2__)
 //            lcd.print(" \367C              "); // 1 = Centigrade // degree symbol in octal (247 in decimal) - for Adafruit SSD1306
             lcd.print(F(" \260C              ")); // 1 = Centigrade // degree symbol in octal (176 in decimal) - for U8g2 u8g2_font_6x10_mf
 #elif defined (__Use_Small_SSD1306_LCD_Print_8x16__) || defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
             lcd.print(F(" \200C       ")); // 1 = Centigrade // degree symbol in octal (92+32 in decimal) - for SSD1306_OLED_HW_I2C_LIB 8x16
 #elif defined (__Use_1602_LCD__) || defined (__Use_DFRobot_1602_LCD__)
-            lcd.print(F(" \337C              ")); // 1 = Centigrade // degree symbol in octal (247 in decimal)
+        //            --|1234567890123456+++|-- <----- Measure    
+            lcd.print(F(" \337C             ")); // 1 = Centigrade // degree symbol in octal (247 in decimal)
 #else
-            lcd.print(F(" \337C              ")); // 1 = Centigrade // degree symbol in octal (223 in decimal)
+            lcd.print(F(" \337C             ")); // 1 = Centigrade // degree symbol in octal (223 in decimal)
 #endif
             break;
           }
           case(kTemperatureUnits_K):
           {
+        //            --|1234567890123456|-- <----- Measure    
             lcd.print(F(" K              "));     // 2 = Kelvin    
             break;
           }
@@ -1101,7 +1117,8 @@ state=kSTATE_TEMPERATURE;
           {
         //   Print Battery Voltage when vaping
             lcd.setCursor(0,0);
-  // -----------------"                " ----- Measure      
+  // -------------------"                " ----- Measure      
+        //            --|1234567890123456|-- <----- Measure    
             lcd.print(F("Diagnostics:    "));
             lcd.setCursor(0,1);
             lcd.print(F("                "));
@@ -1191,10 +1208,20 @@ state=kSTATE_TEMPERATURE;
         lcd.setCursor(0,1);
         switch(EEPROM.read(EE_programAddress)){
           case(kPM_Juice):
+        //            --|1234567890123456|-- <----- Measure    
             lcd.print(F("JUICE           "));            // Display JUICE in custom characters
             break;
           case(kPM_Fresh):
             lcd.print(F("FRESH           "));            // Display FRESH in custom characters
+            break;
+          case(kPM_Bad):
+            lcd.print(F("BAD             "));            // Display FRESH in custom characters
+            break;
+          case(kPM_Luck):
+            lcd.print(F("LUCK            "));            // Display FRESH in custom characters
+            break;
+          case(kPM_Pot):
+            lcd.print(F("POT             "));            // Display FRESH in custom characters
             break;
           case(kPM_SpeedRead):             // Display the message
             lcd.print(F("SpeedRead       "));
@@ -1210,6 +1237,9 @@ state=kSTATE_TEMPERATURE;
             break;
           case(kPM_Diag_CurVoltRead_EE):   // Display the voltage and EE storage for the current measuring resistance
             lcd.print(F("Diag V EE CUR   "));
+            break;
+          case(kPM_Vape_Time):   // Display the voltage and EE storage for the current measuring resistance
+            lcd.print(F("Vape Timer      "));
             break;
         }
 
@@ -1232,6 +1262,7 @@ state=kSTATE_TEMPERATURE;
       {
 //        lcd.clear();
         lcd.setCursor(0,0);
+        //        --|1234567890123456|-- <----- Measure    
         lcd.print(F("Let's roll!!    "));
         lcd.setCursor(0,1);
         lcd.print(F("                "));
@@ -1283,6 +1314,7 @@ state=kSTATE_TEMPERATURE;
         {
           case(kVoltageControl):
           {
+        //            --|1234567890123456|-- <----- Measure    
             lcd.print(F("Voltage         ")); 
             break;
           }
@@ -1317,9 +1349,11 @@ state=kSTATE_TEMPERATURE;
       {
 //        lcd.clear();
         lcd.setCursor(0,0);
+        //        --|1234567890123456|-- <----- Measure    
         lcd.print(F("Are you sure?   "));
         lcd.setCursor(0,1);
         if (EEPROM.read(EE_defaultsSureAddress))
+        //          --|1234567890123456|-- <----- Measure    
           lcd.print(F("YES             ")); // 1 = YES
         else
           lcd.print(F("NO              ")); // 0 = NO
@@ -1379,7 +1413,7 @@ void buttonWasClicked(){
 */
 
 // Not required as we clear only second line now
-//#if defined (__Use_SSD1306_LCD__)
+//#if defined (__Use_SSD1306_LCD_U8g2__)
 //    lcd.sendBuffer();          // transfer internal memory to the display
 //#else
 //  lcd.clear();
@@ -1389,7 +1423,7 @@ void buttonWasClicked(){
 void buttonWasHeld(){
 //  lcd.clear();
   
-//#if defined (__Use_SSD1306_LCD__)
+//#if defined (__Use_SSD1306_LCD_U8g2__)
 //    lcd.sendBuffer();          // transfer internal memory to the display
 //#else
 //  lcd.clear();
@@ -1444,7 +1478,7 @@ void displayProgram() {
       //JUICE
 //      do 
 //      {
-#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD__)  && !defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__)  && !defined (__Use_Small_SSD1306_LCD__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD_U8g2__)  && !defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__)  && !defined (__Use_Small_SSD1306_LCD__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
         customJ(0);    // displays custom 0 on the LCD
         delay(interval);
         customU(4);
@@ -1455,6 +1489,30 @@ void displayProgram() {
         delay(interval);
         customE(14);
         delay(interval);
+#elif !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD_U8g2__)
+#if defined (__Using_fat_custom_characters__)                 
+        customJ_SSD(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customU_SSD(7);
+        delay(interval);
+        customI_SSD(13);
+        delay(interval);
+        customC_SSD(15);
+        delay(interval);
+        customE_SSD(14);
+        delay(interval);
+#else
+        customJ_SSD_thin(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customU_SSD_thin(4);
+        delay(interval);
+        customI_SSD_thin(7);
+        delay(interval);
+        customC_SSD_thin(10);
+        delay(interval);
+        customE_SSD_thin(15);
+        delay(interval);
+#endif
 #else
         lcd.setCursor(0,0);
         lcd.print(F("JUICE"));
@@ -1471,16 +1529,167 @@ void displayProgram() {
     {
 //      do 
 //      {
-#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD__)  && !defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__)  && !defined (__Use_Small_SSD1306_LCD__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD_U8g2__)  && !defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__)  && !defined (__Use_Small_SSD1306_LCD__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
         customF(0);    // displays custom 0 on the LCD
+        delay(interval);
         customR(3);
+        delay(interval);
         customE(7);
+        delay(interval);
         customS(10);
+        delay(interval);
         customH(13);
         delay(interval);
+#elif !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD_U8g2__)
+#if defined (__Using_fat_custom_characters__)                 
+        customF_SSD(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customR_SSD(3);
+        delay(interval);
+        customE_SSD(7);
+        delay(interval);
+        customS_SSD(10);
+        delay(interval);
+        customH_SSD(13);
+        delay(interval);
+#else
+        customF_SSD_thin(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customR_SSD_thin(3);
+        delay(interval);
+        customE_SSD_thin(7);
+        delay(interval);
+        customS_SSD_thin(10);
+        delay(interval);
+        customH_SSD_thin(13);
+        delay(interval);
+#endif
 #else
         lcd.setCursor(0,0);
         lcd.print(F("FRESH"));
+        delay(interval);
+#endif
+        lcd.clear(); 
+        delay(interval);
+//      }
+//      while(true);
+      break;
+    }
+
+    case(kPM_Bad):
+    {
+//      do 
+//      {
+#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD_U8g2__)  && !defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__)  && !defined (__Use_Small_SSD1306_LCD__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+        customB(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customA(3);
+        delay(interval);
+        customD(7);
+        delay(interval);
+#elif !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD_U8g2__)
+#if defined (__Using_fat_custom_characters__)                 
+        customB_SSD(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customA_SSD(7);
+        delay(interval);
+        customD_SSD(14);
+        delay(interval);
+#else
+        customB_SSD_thin(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customA_SSD_thin(4);
+        delay(interval);
+        customD_SSD_thin(8);
+        delay(interval);
+#endif
+#else
+        lcd.setCursor(0,0);
+        lcd.print(F("BAD"));
+        delay(interval);
+#endif
+        lcd.clear(); 
+        delay(interval);
+//      }
+//      while(true);
+      break;
+    }
+
+    case(kPM_Luck):
+    {
+//      do 
+//      {
+#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD_U8g2__)  && !defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__)  && !defined (__Use_Small_SSD1306_LCD__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+        customL(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customU(3);
+        delay(interval);
+        customC(7);
+        delay(interval);
+        customK(11);
+        delay(interval);
+#elif !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD_U8g2__)
+#if defined (__Using_fat_custom_characters__)                 
+        customL_SSD(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customU_SSD(4);
+        delay(interval);
+        customC_SSD(11);
+        delay(interval);
+        customK_SSD(17);
+        delay(interval);
+#else
+        customL_SSD_thin(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customU_SSD_thin(4);
+        delay(interval);
+        customC_SSD_thin(8);
+        delay(interval);
+        customK_SSD_thin(12);
+        delay(interval);
+#endif
+#else
+        lcd.setCursor(0,0);
+        lcd.print(F("LUCK"));
+        delay(interval);
+#endif
+        lcd.clear(); 
+        delay(interval);
+//      }
+//      while(true);
+      break;
+    }
+
+    case(kPM_Pot):
+    {
+//      do 
+//      {
+#if !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD_U8g2__)  && !defined (__Use_SSD1306_OLED_HW_I2C_FULL_LCD__)  && !defined (__Use_Small_SSD1306_LCD__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16__)  && !defined (__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+        customP(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customO(3);
+        delay(interval);
+        customT(7);
+        delay(interval);
+#elif !defined (__Use_TFT_ILI9163C_Extended_Char_LCD__) && !defined (__Use_SSD1306_LCD_U8g2__)
+#if defined (__Using_fat_custom_characters__)                 
+        customP_SSD(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customO_SSD(7);
+        delay(interval);
+        customT_SSD(14);
+        delay(interval);
+#else
+        customP_SSD_thin(0);    // displays custom 0 on the LCD
+        delay(interval);
+        customO_SSD_thin(4);
+        delay(interval);
+        customT_SSD_thin(8);
+        delay(interval);
+#endif
+#else
+        lcd.setCursor(0,0);
+        lcd.print(F("POT"));
         delay(interval);
 #endif
         lcd.clear(); 
@@ -1501,7 +1710,7 @@ void displayProgram() {
     {
       if (millis()-lastMillis>1000){
         lastMillis=millis();
-#if defined (__Use_SSD1306_LCD__)
+#if defined (__Use_SSD1306_LCD_U8g2__)
         lcd.setPrintMode(false);    // disable individual print
 #elif defined(__Use_TFT_ILI9163C_Extended_Char_LCD__)
 //don't clear for 1.44' display
@@ -1526,7 +1735,7 @@ void displayProgram() {
         lcd.print(analogRead(coilVoltageDropPin)*5.2/1024);
         lcd.setCursor(14,1);
         lcd.print("V");
-#if defined (__Use_SSD1306_LCD__)
+#if defined (__Use_SSD1306_LCD_U8g2__)
         lcd.sendBuffer();          // transfer internal memory to the display
         lcd.setPrintMode(true);    // re-enable individual print
 #endif
@@ -1539,7 +1748,7 @@ void displayProgram() {
     {
       if (millis()-lastMillis>1000){
         lastMillis=millis();
-#if defined (__Use_SSD1306_LCD__)
+#if defined (__Use_SSD1306_LCD_U8g2__)
         lcd.setPrintMode(false);    // disable individual print
 #elif defined(__Use_TFT_ILI9163C_Extended_Char_LCD__)
 //don't clear for 1.44' display
@@ -1564,7 +1773,7 @@ void displayProgram() {
         lcd.print(EEPROM.read(EE_batteryVoltageDropAddress)*5.2/1024);
         lcd.setCursor(14,1);
         lcd.print("V");
-#if defined (__Use_SSD1306_LCD__)
+#if defined (__Use_SSD1306_LCD_U8g2__)
         lcd.sendBuffer();          // transfer internal memory to the display
         lcd.setPrintMode(true);    // re-enable individual print
 #endif
@@ -1577,7 +1786,7 @@ void displayProgram() {
     {
       if (millis()-lastMillis>1000){
         lastMillis=millis();
-#if defined (__Use_SSD1306_LCD__)
+#if defined (__Use_SSD1306_LCD_U8g2__)
         lcd.setPrintMode(false);    // disable individual print
 #elif defined(__Use_TFT_ILI9163C_Extended_Char_LCD__)
 //don't clear for 1.44' display
@@ -1602,7 +1811,7 @@ void displayProgram() {
         lcd.print(EEPROM.read(EE_coilVoltageDropAddress)*5.2/1024);
         lcd.setCursor(14,1);
         lcd.print("V");
-#if defined (__Use_SSD1306_LCD__)
+#if defined (__Use_SSD1306_LCD_U8g2__)
         lcd.sendBuffer();          // transfer internal memory to the display
         lcd.setPrintMode(true);    // re-enable individual print
 #endif
@@ -1615,7 +1824,7 @@ void displayProgram() {
     {
       if (millis()-lastMillis>1000){
         lastMillis=millis();
-#if defined (__Use_SSD1306_LCD__)
+#if defined (__Use_SSD1306_LCD_U8g2__)
         lcd.setPrintMode(false);    // disable individual print
 #elif defined(__Use_TFT_ILI9163C_Extended_Char_LCD__)
 //don't clear for 1.44' display
@@ -1640,14 +1849,55 @@ void displayProgram() {
         lcd.print(EEPROM.read(EE_currentMeasureAddress)*5.2/1024);
         lcd.setCursor(14,1);
         lcd.print("V");
-#if defined (__Use_SSD1306_LCD__)
+#if defined (__Use_SSD1306_LCD_U8g2__)
         lcd.sendBuffer();          // transfer internal memory to the display
         lcd.setPrintMode(true);    // re-enable individual print
 #endif
       }
       break;
     }
-  }
+
+      // Display the voltage and EE storage for the current measuring resistance
+    case(kPM_Vape_Time):   
+    {
+      if (millis()-lastMillis>100){
+        lastMillis=millis();
+#if defined (__Use_SSD1306_LCD_U8g2__)
+        lcd.setPrintMode(false);    // disable individual print
+#elif defined(__Use_TFT_ILI9163C_Extended_Char_LCD__) || defined(__Use_Small_SSD1306_LCD_Print_8x16_lib__)
+//don't clear for 1.44' display
+#else
+        lcd.clear();
+#endif
+        lcd.setCursor(0,0);
+        lcd.print(F("Vape Time    "));
+        lcd.setCursor(9,0);
+//        lcd.print(ul2s((millis()-startVapeTime)/100,4));
+ //       float t = millis()-startVapeTime;
+        float t = lastMillis-startVapeTime;
+        t=t/1000;
+        lcd.print(t);
+        lcd.setCursor(14,0);
+        lcd.print("s");
+        lcd.setCursor(0,1);
+        lcd.print(F("Puffs   "));
+        lcd.setCursor(9,1);
+//        lcd.print(EEPROM.read(EE_currentMeasureAddress));
+        lcd.print(u2s(EEPROM.read(EE_puffCountAddress),4));
+/*        
+        lcd.setCursor(9,1);
+        lcd.print(EEPROM.read(EE_currentMeasureAddress)*5.2/1024);
+        lcd.setCursor(14,1);
+        lcd.print("V");
+*/
+#if defined (__Use_SSD1306_LCD_U8g2__)
+        lcd.sendBuffer();          // transfer internal memory to the display
+        lcd.setPrintMode(true);    // re-enable individual print
+#endif
+      }
+      break;
+    }
+}
 }
 /*
 void speedRead(){
@@ -1789,10 +2039,10 @@ void speedRead4(){
   boolean lastScreen=false;
   boolean endIt=false;
 
-#if defined (__Use_SSD1306_LCD__)
+#if defined (__Use_SSD1306_LCD_U8g2__)
   lcd.setPrintMode(false);  //turn off sendBuffer()
 #endif
-//#if defined (__Use_SSD1306_LCD__)
+//#if defined (__Use_SSD1306_LCD_U8g2__)
 //  lcd.clearBuffer();          // clear the internal memory - not required as clear() is available
 //#else
   lcd.clear();
@@ -1829,7 +2079,7 @@ void speedRead4(){
           lcd.setCursor(kLCDWidth/2-strlen(allWords[kLCDHeight-1])/2,kLCDHeight-1);
           lcd.print(allWords[kLCDHeight-1]);
       }
-#if defined (__Use_SSD1306_LCD__)
+#if defined (__Use_SSD1306_LCD_U8g2__)
       lcd.sendBuffer();          // transfer internal memory to the display
 #endif
       if (allWords[kLCDHeight-1][i-1] == '.'  || allWords[kLCDHeight-1][i-1] == ',')
@@ -1841,7 +2091,7 @@ void speedRead4(){
       firstScreen=false;
     }
   }
-#if defined (__Use_SSD1306_LCD__)
+#if defined (__Use_SSD1306_LCD_U8g2__)
   lcd.setPrintMode(true);  //turn back on sendBuffer()
 #endif
 }
@@ -1882,6 +2132,7 @@ void EE_Presets(){
   EEPROM.write(EE_currentMeasureAddress, 0);       // default to 0 - no current flow
 //  EEPROM.write(EE_voltage4PowerAddress, 0);        // default to 0 for safety - this is set when the power control option is selected, or power is adjusted
 //  EEPROM.write(EE_voltage4TemperatureAddress, 0);  // default to 0 for safety - this is set when the temperature control option is selected, or temperature is adjusted
+  EEPROM.write(EE_puffCountAddress, 0);      // reset puff count to 0
 }
 
 void EE_Presets_Test(){
@@ -1905,7 +2156,7 @@ void EE_Presets_Test(){
 }
 
 /*============================================================================*/
-/* Convert unsigned value to d-digit integer string in local buffer      */
+/* Convert unsigned value to d-digit integer string in local buffer           */
 /*============================================================================*/
 char *u2s(unsigned  x, unsigned d)
 {  static char b[5];
@@ -1922,7 +2173,7 @@ char *u2s(unsigned  x, unsigned d)
 }
 
 /*============================================================================*/
-/* Convert unsigned value to d-digit long string in local buffer      */
+/* Convert unsigned long value to d-digit long string in local buffer         */
 /*============================================================================*/
 char *ul2s(unsigned long x, unsigned d)
 {  static char b[7];
